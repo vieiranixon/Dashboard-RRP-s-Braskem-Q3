@@ -1,4 +1,4 @@
-const CACHE_NAME = "dashboard-v4";
+const CACHE_NAME = "dashboard-v5";
 
 const urlsToCache = [
   "./",
