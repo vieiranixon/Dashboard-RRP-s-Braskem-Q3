@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>John Crane / Braskem · Dashboard Geral</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EC;--bg2:#EAE6DE;--surface:#FFFFFF;
+  --border:#E0DBD2;--border2:#CFC8BC;
+  --txt:#18150F;--txt2:#635C50;--txt3:#9E9487;
+  --accent:#B5622A;--accent-h:#9A5020;--accent-bg:#FDF2E8;
+  --green:#27714A;--green-bg:#E5F5EE;--green-mid:#3A9464;
+  --red:#AD2E2E;--red-bg:#FAE8E8;
+  --amber:#A86E22;--amber-bg:#FDF2E0;
+  --olive:#4F6835;--olive-bg:#ECF2E2;
+  --purple:#4E4480;--purple-bg:#EBE8F6;
+  --teal:#256A62;--teal-bg:#E2F3F1;
+  --brown:#6E3E1C;--brown-bg:#F5E8DC;
+  --blue:#284F82;--blue-bg:#E3EBF6;
+  --gray:#6B6358;--gray-bg:#EDEBE6;
+  --r:16px;--r2:10px;--r3:8px;
+  --sh:0 1px 3px rgba(0,0,0,.05),0 4px 18px rgba(0,0,0,.04);
+  --sh2:0 4px 12px rgba(0,0,0,.07),0 16px 48px rgba(0,0,0,.06);
+  --sh3:0 2px 8px rgba(0,0,0,.1),0 20px 60px rgba(0,0,0,.1);
+  --sidebar-w:248px;--hdr:64px;
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--txt);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+.app{display:flex;height:100vh;overflow:hidden}
+
+/* ── SIDEBAR ───────────────────────────────── */
+.sidebar{width:var(--sidebar-w);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;transition:width .32s cubic-bezier(.4,0,.2,1);z-index:50;position:relative}
+.sidebar.col{width:64px}
+.sb-top{padding:18px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;min-height:var(--hdr);overflow:hidden}
+.sb-logo{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:#fff;display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Syne',sans-serif;font-weight:800;font-size:16px;letter-spacing:-0.5px;box-shadow:0 2px 8px rgba(181,98,42,.3);padding:3px}
+.sb-brand{overflow:hidden;white-space:nowrap;transition:opacity .2s}
+.sb-brand-name{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--txt);line-height:1.2}
+.sb-brand-sub{font-size:11px;color:var(--txt3);letter-spacing:.2px}
+.sidebar.col .sb-brand{opacity:0}
+.sb-nav{flex:1;padding:12px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:1px;scrollbar-width:none}
+.sb-nav::-webkit-scrollbar{display:none}
+.nav-sec{font-size:9.5px;font-weight:700;color:var(--txt3);text-transform:uppercase;letter-spacing:1px;padding:12px 8px 5px;white-space:nowrap;overflow:hidden}
+.sidebar.col .nav-sec{opacity:0;height:0;padding:0;margin:0}
+.nv{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:var(--r3);cursor:pointer;color:var(--txt2);font-size:13px;font-weight:500;transition:all .15s;white-space:nowrap;overflow:hidden;position:relative}
+.nv:hover{background:var(--bg);color:var(--txt)}
+.nv.on{background:var(--accent-bg);color:var(--accent);font-weight:600}
+.nv.on::after{content:'';position:absolute;right:0;top:20%;height:60%;width:3px;background:var(--accent);border-radius:2px 0 0 2px}
+.ni{font-size:16px;flex-shrink:0;width:22px;text-align:center;line-height:1}
+.nl{overflow:hidden;transition:opacity .2s}
+.sidebar.col .nl{opacity:0}
+.sb-bot{padding:12px 10px;border-top:1px solid var(--border)}
+.sb-tog{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r3);cursor:pointer;color:var(--txt3);font-size:12px;font-weight:500;transition:all .15s;white-space:nowrap;overflow:hidden;user-select:none}
+.sb-tog:hover{background:var(--bg2);color:var(--txt2)}
+.sb-tog svg{flex-shrink:0;transition:transform .32s cubic-bezier(.4,0,.2,1)}
+.sidebar.col .sb-tog svg{transform:rotate(180deg)}
+.sidebar.col .sb-tog span{opacity:0}
+
+/* ── CONTENT ─────────────────────────────── */
+.content{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+
+/* ── TOPBAR ──────────────────────────────── */
+.topbar{height:var(--hdr);flex-shrink:0;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;gap:16px;box-shadow:0 1px 0 var(--border)}
+.tb-left{display:flex;align-items:center;gap:10px}
+.page-title{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--txt);letter-spacing:-.3px}
+.period-pill{font-size:11.5px;color:var(--txt3);background:var(--bg2);padding:3px 11px;border-radius:20px;border:1px solid var(--border)}
+.tb-right{display:flex;align-items:center;gap:8px}
+.live-badge{display:flex;align-items:center;gap:6px;background:var(--green-bg);color:var(--green);border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;border:1px solid rgba(39,113,74,.12)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green-mid);animation:blink 2.2s ease-in-out infinite;flex-shrink:0}
+@keyframes blink{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.85)}}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 15px;border-radius:var(--r3);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .18s;letter-spacing:-.1px}
+.btn svg{width:14px;height:14px;flex-shrink:0}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 1px 4px rgba(181,98,42,.25)}
+.btn-primary:hover{background:var(--accent-h);transform:translateY(-1px);box-shadow:0 4px 14px rgba(181,98,42,.3)}
+.btn-primary:active{transform:translateY(0)}
+.btn-ghost{background:transparent;color:var(--txt2);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--bg2);color:var(--txt)}
+
+/* ── SCROLL AREA ─────────────────────────── */
+.scroll{flex:1;overflow-y:auto;padding:0 0 60px}
+.scroll::-webkit-scrollbar{width:5px}
+.scroll::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── HERO BANNER ─────────────────────────── */
+.hero{background:linear-gradient(108deg,#1A150F 0%,#3A2210 55%,#5A3218 100%);padding:32px 36px;display:flex;align-items:center;justify-content:space-between;gap:24px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-60px;right:-40px;width:280px;height:280px;border-radius:50%;background:rgba(181,98,42,.12);pointer-events:none}
+.hero::after{content:'';position:absolute;bottom:-80px;right:140px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.hero-text{position:relative;z-index:1}
+.hero-eyebrow{font-size:11px;font-weight:600;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
+.hero-title{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:#fff;line-height:1.2;letter-spacing:-.5px;margin-bottom:8px}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.55);max-width:420px;line-height:1.55}
+.hero-stats{display:flex;align-items:center;gap:6px;margin-top:18px;flex-wrap:wrap}
+.hero-stat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:7px 14px;text-align:center}
+.hero-stat-num{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;color:#fff}
+.hero-stat-lbl{font-size:10px;color:rgba(255,255,255,.45);margin-top:1px;white-space:nowrap}
+.hero-right{position:relative;z-index:1;flex-shrink:0}
+.health-ring-wrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.health-label{font-size:11px;color:rgba(255,255,255,.45);font-weight:600;text-transform:uppercase;letter-spacing:.8px}
+.health-score{font-family:'Syne',sans-serif;font-weight:800;font-size:13px;padding:4px 12px;border-radius:20px;margin-top:2px}
+
+/* ── INNER PADDING ───────────────────────── */
+.inner{padding:24px 28px}
+
+/* ── FILTERS ─────────────────────────────── */
+.filters{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px 18px;margin-bottom:22px;display:flex;align-items:center;flex-wrap:wrap;gap:8px;box-shadow:var(--sh)}
+.fc{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--border);border-radius:var(--r3);padding:5px 10px}
+.fc label{font-weight:700;color:var(--txt3);font-size:10px;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.fc select{background:none;border:none;outline:none;font-size:13px;color:var(--txt);font-family:'Inter',sans-serif;cursor:pointer;font-weight:500}
+.fdiv{width:1px;height:18px;background:var(--border);flex-shrink:0}
+.fcount{margin-left:auto;font-size:13px;color:var(--txt2)}
+.fcount b{color:var(--txt);font-weight:600}
+.freset{font-size:12px;color:var(--txt3);cursor:pointer;border:none;background:none;font-family:'Inter',sans-serif;padding:5px 9px;border-radius:6px;transition:all .15s;font-weight:500}
+.freset:hover{background:var(--red-bg);color:var(--red)}
+
+/* ── SECTION HEADER ──────────────────────── */
+.sh{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px;padding-top:8px}
+.sh-line{display:flex;align-items:center;gap:10px}
+.sh-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.st{font-family:'Syne',sans-serif;font-weight:700;font-size:17px;color:var(--txt);letter-spacing:-.2px}
+.ss{font-size:11.5px;color:var(--txt3);margin-top:2px}
+.sh-sep{height:1px;background:var(--border);flex:1;margin-left:14px;opacity:.6}
+
+/* ── KPI GRID ────────────────────────────── */
+.kgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:24px}
+@media(max-width:1200px){.kgrid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:780px){.kgrid{grid-template-columns:repeat(2,1fr)}}
+
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px 16px;box-shadow:var(--sh);cursor:default;transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;animation:kfade .4s ease forwards;opacity:0}
+@keyframes kfade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.kpi:hover{transform:translateY(-3px);box-shadow:var(--sh2)}
+.kpi-top-stripe{position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r) var(--r) 0 0}
+.kpi-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;margin-top:6px}
+.kpi-ico{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.kpi-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;margin-top:2px}
+.kpi-val{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;line-height:1;color:var(--txt);letter-spacing:-.5px;margin-bottom:4px;min-height:36px}
+.kpi-lbl{font-size:11.5px;color:var(--txt2);font-weight:500}
+.kpi-bar{height:3px;background:var(--bg2);border-radius:2px;margin-top:14px;overflow:hidden}
+.kpi-fill{height:100%;border-radius:2px;width:0;transition:width 1.3s cubic-bezier(.4,0,.2,1)}
+.kpi-trend{position:absolute;bottom:16px;right:16px;font-size:10px;font-weight:700;display:flex;align-items:center;gap:2px}
+
+/* ── CHART GRIDS ─────────────────────────── */
+.cg2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+.cg3{display:grid;grid-template-columns:2.2fr 1fr 1fr;gap:16px;margin-bottom:18px}
+@media(max-width:960px){.cg2,.cg3{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:20px 22px;box-shadow:var(--sh);transition:box-shadow .2s}
+.card:hover{box-shadow:var(--sh2)}
+.card-ttl{font-family:'Syne',sans-serif;font-weight:700;font-size:13.5px;color:var(--txt);margin-bottom:2px}
+.card-sub{font-size:11px;color:var(--txt3);margin-bottom:16px}
+.chart-wrap{position:relative;width:100%}
+.leg{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+.li{display:flex;align-items:center;gap:5px;font-size:11.5px;color:var(--txt2)}
+.ld{width:9px;height:9px;border-radius:2px;flex-shrink:0}
+
+/* ── RING (implementacao) ─────────────────── */
+.ring-center{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px 0 0}
+.ring-pct-lbl{font-family:'Syne',sans-serif;font-weight:800;font-size:24px;color:var(--txt)}
+.ring-sub-lbl{font-size:10px;color:var(--txt3);margin-top:1px;font-weight:500}
+
+/* ── INSIGHTS FEED ───────────────────────── */
+.ifeed{display:flex;flex-direction:column;gap:10px;margin-bottom:24px}
+.ins{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);display:flex;gap:14px;align-items:flex-start;border-left:4px solid transparent;transition:transform .2s,box-shadow .2s;animation:ifade .4s ease forwards;opacity:0}
+@keyframes ifade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.ins:hover{transform:translateX(3px);box-shadow:var(--sh2)}
+.ins.ok{border-left-color:var(--green)}
+.ins.warn{border-left-color:var(--amber)}
+.ins.bad{border-left-color:var(--red)}
+.ins.info{border-left-color:var(--blue)}
+.ins-ico{width:36px;height:36px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:17px;margin-top:1px}
+.ins-body{flex:1}
+.ins-ttl{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--txt);margin-bottom:4px}
+.ins-txt{font-size:12.5px;color:var(--txt2);line-height:1.55}
+.ins-foot{margin-top:8px;display:flex;align-items:center;gap:8px}
+.ins-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.ins-meta{font-size:11px;color:var(--txt3)}
+
+/* ── TABLE ───────────────────────────────── */
+.tbl-wrap{overflow-x:auto;border-radius:0 0 var(--r) var(--r)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{text-align:left;padding:10px 14px;background:var(--bg2);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--txt3);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody tr{cursor:pointer;transition:background .1s}
+tbody tr:hover td{background:#FDFAF6}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--txt);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+.pill{display:inline-flex;align-items:center;gap:4px;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;white-space:nowrap}
+.pill::before{content:'';width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.pa{background:var(--red-bg);color:var(--red)}.pa::before{background:var(--red)}
+.pm{background:var(--amber-bg);color:var(--amber)}.pm::before{background:var(--amber)}
+.pb{background:var(--olive-bg);color:var(--olive)}.pb::before{background:var(--olive)}
+.sr{background:var(--green-bg);color:var(--green)}.sr::before{background:var(--green-mid)}
+.sp{background:var(--amber-bg);color:var(--amber)}.sp::before{background:var(--amber)}
+.sn{background:var(--purple-bg);color:var(--purple)}.sn::before{background:var(--purple)}
+.tbl-prog{height:3px;background:var(--bg2);border-radius:2px;overflow:hidden;min-width:50px}
+.tbl-prog-fill{height:100%;border-radius:2px;background:var(--accent)}
+.tbl-more{padding:12px 18px;font-size:12px;color:var(--txt3);border-top:1px solid var(--border);background:var(--bg2)}
+
+/* ── DETAIL MODAL ────────────────────────── */
+.ov{position:fixed;inset:0;background:rgba(24,21,15,.5);z-index:200;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px);animation:ofade .2s ease forwards}
+@keyframes ofade{from{opacity:0}to{opacity:1}}
+.ov.open{display:flex}
+.dm{background:var(--surface);border-radius:var(--r);padding:28px;max-width:500px;width:90%;box-shadow:var(--sh3);max-height:85vh;overflow-y:auto;animation:mslide .25s cubic-bezier(.34,1.2,.64,1) forwards}
+@keyframes mslide{from{transform:scale(.95) translateY(10px)}to{transform:scale(1) translateY(0)}}
+.dm-title{font-family:'Syne',sans-serif;font-weight:700;font-size:18px;margin-bottom:18px;color:var(--txt);display:flex;align-items:center;gap:10px}
+.dm-title-ico{width:34px;height:34px;border-radius:9px;background:var(--accent-bg);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:15px}
+.dr{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.dr:last-child{border-bottom:none}
+.dk{color:var(--txt3);font-weight:600;min-width:130px;flex-shrink:0;font-size:12px;text-transform:uppercase;letter-spacing:.3px;padding-top:1px}
+.dv{color:var(--txt);font-weight:500}
+
+/* ── IMPORT MODAL ────────────────────────── */
+.mov{position:fixed;inset:0;background:rgba(24,21,15,.5);z-index:300;display:none;align-items:center;justify-content:center;backdrop-filter:blur(3px)}
+.mov.open{display:flex}
+.mm{background:var(--surface);border-radius:var(--r);padding:30px;max-width:440px;width:90%;box-shadow:var(--sh3);animation:mslide .25s cubic-bezier(.34,1.2,.64,1) forwards}
+.mm-title{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;margin-bottom:5px;color:var(--txt)}
+.mm-sub{font-size:13px;color:var(--txt2);margin-bottom:22px;line-height:1.65}
+.dz{border:2px dashed var(--border2);border-radius:var(--r);padding:36px 20px;text-align:center;cursor:pointer;background:var(--bg);transition:all .2s}
+.dz:hover,.dz.drag{border-color:var(--accent);background:var(--accent-bg)}
+.dz-ico{font-size:32px;margin-bottom:10px;line-height:1}
+.dz-main{font-size:13.5px;color:var(--txt2)}.dz-main b{color:var(--accent)}
+.dz-hint{font-size:11px;color:var(--txt3);margin-top:6px}
+.mm-acts{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+#finp{display:none}
+
+/* ── FOOTER ──────────────────────────────── */
+.footer{background:var(--surface);border-top:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.footer-left{font-size:11.5px;color:var(--txt3)}
+.footer-left b{color:var(--txt2);font-weight:600}
+.footer-right{font-size:11px;color:var(--txt3)}
+
+/* ── TOAST ───────────────────────────────── */
+.toast{position:fixed;bottom:20px;right:20px;z-index:500;background:#1A150F;color:#fff;border-radius:var(--r2);padding:12px 18px;font-size:13px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,.25);max-width:300px;transform:translateY(70px) scale(.95);opacity:0;transition:all .3s cubic-bezier(.34,1.5,.64,1)}
+/* ── HEATMAP */
+.hmap{display:grid;gap:4px;margin-top:4px}
+.hmap-row{display:flex;align-items:center;gap:4px}
+.hmap-lbl{font-size:11px;color:var(--txt3);width:96px;flex-shrink:0;text-align:right;padding-right:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hmap-cell{flex:1;height:36px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:default;transition:filter .15s,transform .15s;border:1px solid transparent}
+.hmap-cell:hover{filter:brightness(.85);transform:scale(1.06)}
+.hmap-hdr{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.hmap-hdr-lbl{font-size:10px;font-weight:700;color:var(--txt3);flex:1;text-align:center}
+.hmap-hdr-spc{width:96px;flex-shrink:0}
+/* ── TAG RANKING */
+.tag-rank{display:flex;flex-direction:column;gap:0}
+.tag-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
+.tag-row:last-child{border-bottom:none}
+.trn{font-family:'Syne',sans-serif;font-weight:700;font-size:12px;width:18px;text-align:right;flex-shrink:0;color:var(--txt3)}
+.trn.top{color:var(--accent)}
+.tt{font-size:13px;font-weight:600;color:var(--txt);flex:0 0 72px}
+.ts{font-size:11px;color:var(--txt3);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tb2{width:70px;flex-shrink:0}
+.tb2-bg{height:4px;background:var(--bg2);border-radius:2px;overflow:hidden}
+.tb2-fill{height:100%;border-radius:2px;background:var(--accent)}
+.tc{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--txt);width:24px;text-align:right;flex-shrink:0}
+/* ── SECTION FADE */
+.sec-anim{opacity:0;transform:translateY(16px);transition:opacity .5s ease,transform .5s ease}
+.sec-anim.vis{opacity:1;transform:translateY(0)}
+/* ── PRINT */
+@media print{
+  .sidebar,.topbar,.filters,.btn,.freset,.footer,.mov,.ov,.sb-tog{display:none!important}
+  .app{display:block;height:auto}.content{overflow:visible}.scroll{overflow:visible;padding:0}
+  .hero{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .kpi,.card,.ins{break-inside:avoid}.inner{padding:16px}
+}
+.toast.show{transform:translateY(0) scale(1);opacity:1}
+</style>
+<link href="manifest.json" rel="manifest"/><meta content="#B5622A" name="theme-color"/></head>
+<body>
+<div class="app">
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sb">
+<div class="sb-top">
+<div class="sb-logo"><img alt="Braskem" src="data:image/png;base64,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" style="width:100%;height:100%;object-fit:contain;border-radius:8px"/></div>
+<div class="sb-brand">
+<div class="sb-brand-name">John Crane / Braskem</div>
+<div class="sb-brand-sub">Dashboard Geral</div>
+</div>
+</div>
+<nav class="sb-nav">
+<div class="nav-sec">Painel</div>
+<div class="nv on" onclick="goTo('hero')"><span class="ni">●</span><span class="nl">Visão Geral</span></div>
+<div class="nv" onclick="goTo('s-temporal')"><span class="ni">◈</span><span class="nl">Evolução Temporal</span></div>
+<div class="nv" onclick="goTo('s-setores')"><span class="ni">▨</span><span class="nl">Por Setor</span></div>
+<div class="nv" onclick="goTo('s-prio')"><span class="ni">▲</span><span class="nl">Prioridade</span></div>
+<div class="nv" onclick="goTo('s-insights')"><span class="ni">◕</span><span class="nl">Insights</span></div>
+<div class="nv" onclick="goTo('s-table')"><span class="ni">▤</span><span class="nl">Listagem</span></div>
+<div class="nav-sec">Análises</div>
+<div class="nv" onclick="goTo('s-ranking')"><span class="ni">◼</span><span class="nl">Equipamentos</span></div>
+</nav>
+<div class="sb-bot">
+<div class="sb-tog" onclick="toggleSB()">
+<svg fill="none" height="16" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24" width="16"><path d="M15 18l-6-6 6-6"></path></svg>
+<span>Recolher menu</span>
+</div>
+</div>
+</aside>
+<!-- CONTENT -->
+<div class="content">
+<!-- TOPBAR -->
+<div class="topbar">
+<div class="tb-left">
+<div class="page-title">John Crane / Braskem — Dashboard Geral</div>
+<span class="period-pill" id="periodPill">Jan 2025 – Mai 2026</span>
+</div>
+<div class="tb-right">
+<div class="live-badge"><span class="live-dot"></span>163 RRPs carregadas</div>
+<button class="btn btn-ghost" onclick="window.print()" title="Exportar PDF"><svg fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px" viewbox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect height="8" width="12" x="6" y="14"></rect></svg>Exportar</button>
+<button class="btn btn-ghost" onclick="resetF()">
+<svg fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        Limpar filtros
+      </button>
+<button class="btn btn-primary" onclick="openMov()">
+<svg fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" x2="12" y1="3" y2="15"></line></svg>
+        Importar base
+      </button>
+</div>
+</div>
+<div class="scroll" id="scroll">
+<!-- HERO -->
+<div class="hero" id="hero">
+<div class="hero-text">
+<div class="hero-eyebrow">Braskem · Rotina de Recomendações de Processo</div>
+<div class="hero-title">Relatório Q3 — Análise de RRPs</div>
+<div class="hero-sub">Monitoramento consolidado de recomendações de processo, prioridades críticas e indicadores de implementação por setor operacional.</div>
+<div class="hero-stats">
+<div class="hero-stat"><div class="hero-stat-num" id="h-total">163</div><div class="hero-stat-lbl">Total de RRPs</div></div>
+<div class="hero-stat"><div class="hero-stat-num" id="h-real">—</div><div class="hero-stat-lbl">Realizadas</div></div>
+<div class="hero-stat"><div class="hero-stat-num" id="h-pend">—</div><div class="hero-stat-lbl">Pendentes</div></div>
+<div class="hero-stat"><div class="hero-stat-num" id="h-set">—</div><div class="hero-stat-lbl">Setores</div></div>
+</div>
+</div>
+<div class="hero-right">
+<div class="health-ring-wrap">
+<div class="health-label">Saúde Geral</div>
+<svg height="110" viewbox="0 0 110 110" width="110">
+<circle cx="55" cy="55" fill="none" r="46" stroke="rgba(255,255,255,.1)" stroke-width="8"></circle>
+<circle cx="55" cy="55" fill="none" id="hring" r="46" stroke="#3A9464" stroke-dasharray="289.0" stroke-dashoffset="289.0" stroke-linecap="round" stroke-width="8" style="transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)" transform="rotate(-90 55 55)"></circle>
+<text fill="white" font-family="Syne,sans-serif" font-size="20" font-weight="800" id="hring-txt" text-anchor="middle" x="55" y="58">—</text>
+<text fill="rgba(255,255,255,.45)" font-family="Inter,sans-serif" font-size="9" text-anchor="middle" x="55" y="70">realizado</text>
+</svg>
+<div class="health-score" id="health-score" style="background:rgba(255,255,255,.1);color:rgba(255,255,255,.6)">Calculando...</div>
+</div>
+</div>
+</div>
+<div class="inner">
+<!-- FILTERS -->
+<div class="filters">
+<div class="fc"><label>Unidade</label><select id="fU" onchange="applyF()"><option value="">Todas</option></select></div>
+<div class="fdiv"></div>
+<div class="fc"><label>Setor</label><select id="fS" onchange="applyF()"><option value="">Todos</option></select></div>
+<div class="fdiv"></div>
+<div class="fc"><label>Prioridade</label><select id="fP" onchange="applyF()"><option value="">Todas</option><option>Alta</option><option>Media</option><option>Baixa</option></select></div>
+<div class="fdiv"></div>
+<div class="fc"><label>Status</label><select id="fSt" onchange="applyF()"><option value="">Todos</option><option>Realizado</option><option>Pendente</option><option>Nota aberta</option></select></div>
+<div class="fdiv"></div>
+<div class="fc"><label>Mês</label><select id="fM" onchange="applyF()"><option value="">Todo período</option></select></div>
+<div class="fcount">Exibindo <b id="rc">0</b> registros</div>
+<button class="freset" onclick="resetF()">✕ Limpar</button>
+</div>
+<!-- KPIs -->
+<div class="sh">
+<div class="sh-line">
+<div class="sh-icon" style="background:var(--accent-bg);color:var(--accent)">■</div>
+<div><div class="st">Métricas Principais</div><div class="ss">Indicadores consolidados do período filtrado</div></div>
+</div>
+<div class="sh-sep"></div>
+</div>
+<div class="kgrid" id="kgrid"></div>
+<!-- TEMPORAL -->
+<div class="sh sec-anim" id="s-temporal">
+<div class="sh-line">
+<div class="sh-icon" style="background:var(--blue-bg);color:var(--blue)">▲</div>
+<div><div class="st">Evolução Temporal</div><div class="ss">Volume mensal com breakdown de status</div></div>
+</div>
+<div class="sh-sep"></div>
+</div>
+<div class="cg3">
+<div class="card">
+<div class="card-ttl">Volume por Mês</div>
+<div class="card-sub">Realizadas vs. pendentes ao longo do tempo</div>
+<div class="leg" id="leg-tl"></div>
+<div class="chart-wrap" style="height:218px"><canvas aria-label="Volume mensal" id="cTL" role="img"></canvas></div>
+</div>
+<div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0">
+<div class="card-ttl" style="text-align:center">Taxa de Implementação</div>
+<div class="card-sub" style="text-align:center">Proporção de RRPs concluídas</div>
+<div class="ring-center">
+<svg height="120" viewbox="0 0 120 120" width="120">
+<circle cx="60" cy="60" fill="none" r="50" stroke="#EAE6DE" stroke-width="9"></circle>
+<circle cx="60" cy="60" fill="none" id="ring2" r="50" stroke="#27714A" stroke-dasharray="314.2" stroke-dashoffset="314.2" stroke-linecap="round" stroke-width="9" style="transition:stroke-dashoffset 1.5s cubic-bezier(.4,0,.2,1)" transform="rotate(-90 60 60)"></circle>
+</svg>
+<div style="position:relative;margin-top:-76px;text-align:center;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none">
+<div class="ring-pct-lbl" id="rpct">—</div>
+<div class="ring-sub-lbl">implementado</div>
+</div>
+<div style="height:32px"></div>
+</div>
+</div>
+<div class="card">
+<div class="card-ttl">Status Atual</div>
+<div class="card-sub">Distribuição por situação</div>
+<div class="chart-wrap" style="height:148px"><canvas aria-label="Status" id="cSt" role="img"></canvas></div>
+<div class="leg" id="leg-st" style="margin-top:12px;margin-bottom:0"></div>
+</div>
+</div>
+<!-- SETORES -->
+<div class="sh sec-anim" id="s-setores">
+<div class="sh-line">
+<div class="sh-icon" style="background:var(--amber-bg);color:var(--amber)">▶</div>
+<div><div class="st">Análise por Setor</div><div class="ss">Distribuição e tempo por área operacional</div></div>
+</div>
+<div class="sh-sep"></div>
+</div>
+<div class="cg2">
+<div class="card">
+<div class="card-ttl">RRPs por Setor</div>
+<div class="card-sub">Total e prioridade alta por área de operação</div>
+<div class="leg" id="leg-setor"></div>
+<div class="chart-wrap" id="ws" style="height:240px"><canvas aria-label="RRPs por setor" id="cSetor" role="img"></canvas></div>
+</div>
+<div class="card">
+<div class="card-ttl">Tempo Médio de Implementação</div>
+<div class="card-sub">Dias entre identificação e conclusão por setor</div>
+<div class="chart-wrap" id="wt" style="height:240px"><canvas aria-label="Tempo medio" id="cTempo" role="img"></canvas></div>
+</div>
+</div>
+<!-- PRIORIDADE + RECOMENDACOES -->
+<div class="sh sec-anim" id="s-prio">
+<div class="sh-line">
+<div class="sh-icon" style="background:var(--red-bg);color:var(--red)">▲</div>
+<div><div class="st">Prioridade &amp; Ações</div><div class="ss">Classificação de urgência e tipos de recomendação</div></div>
+</div>
+<div class="sh-sep"></div>
+</div>
+<div class="cg2">
+<div class="card">
+<div class="card-ttl">Distribuição por Prioridade</div>
+<div class="card-sub">Proporção de urgência no período filtrado</div>
+<div class="leg" id="leg-prio"></div>
+<div class="chart-wrap" style="height:200px"><canvas aria-label="Prioridade" id="cPrio" role="img"></canvas></div>
+</div>
+<div class="card">
+<div class="card-ttl">Ações Recomendadas</div>
+<div class="card-sub">Frequência dos tipos de recomendação (estático)</div>
+<div class="chart-wrap" style="height:200px"><canvas aria-label="Recomendacoes" id="cRec" role="img"></canvas></div>
+</div>
+</div>
+<!-- TAG RANKING + HEATMAP -->
+<div class="sh sec-anim" id="s-ranking">
+<div class="sh-line">
+<div class="sh-icon" style="background:var(--teal-bg);color:var(--teal)">◼</div>
+<div><div class="st">Equipamentos &amp; Mapa de Calor</div><div class="ss">TAGs com mais ocorrências e concentração por setor</div></div>
+</div>
+<div class="sh-sep"></div>
+</div>
+<div class="cg2 sec-anim">
+<div class="card">
+<div class="card-ttl">Top 10 TAGs por Ocorrências</div>
+<div class="card-sub">Equipamentos com maior volume de recomendações no período filtrado</div>
+<div class="tag-rank" id="tag-rank"></div>
+</div>
+<div class="card">
+<div class="card-ttl">Mapa de Calor — Setor × Prioridade</div>
+<div class="card-sub">Concentração de RRPs por área e nível de urgência</div>
+<div id="hmap-wrap"></div>
+</div>
+</div>
+<div class="sh sec-anim" id="s-insights">
+<div class="sh-line">
+<div class="sh-icon" style="background:var(--purple-bg);color:var(--purple)">◕</div>
+<div><div class="st">Inteligência Analítica</div><div class="ss">Insights gerados automaticamente com base nos dados filtrados</div></div>
+</div>
+<div class="sh-sep"></div>
+</div>
+<div class="ifeed" id="ifeed"></div>
+<!-- TABLE -->
+<div class="sh sec-anim" id="s-table">
+<div class="sh-line">
+<div class="sh-icon" style="background:var(--teal-bg);color:var(--teal)">▤</div>
+<div><div class="st">Listagem de RRPs</div><div class="ss" id="tsub">--</div></div>
+</div>
+<div class="sh-sep"></div>
+</div>
+<div class="card" style="padding:0;overflow:hidden">
+<div class="tbl-wrap">
+<table>
+<thead><tr>
+<th>TAG</th><th>Setor</th><th>Mês</th>
+<th>Anomalia</th>
+<th>Recomendação</th>
+<th>Prioridade</th><th>Status</th>
+<th>Progresso</th><th style="text-align:right">Tempo</th>
+</tr></thead>
+<tbody id="tb"></tbody>
+</table>
+</div>
+<div class="tbl-more" id="tmore"></div>
+</div>
+</div><!-- /inner -->
+<!-- FOOTER -->
+<div class="footer">
+<div class="footer-left">© 2026 <b>John Crane / Braskem</b>  ·  Dashboard RRP  ·  Gerado automaticamente a partir da base de dados carregada</div>
+<div class="footer-right">últ. atualização: <span id="fdate">--</span></div>
+</div>
+</div><!-- /scroll -->
+</div><!-- /content -->
+</div><!-- /app -->
+<!-- DETAIL MODAL -->
+<div class="ov" id="dov" onclick="closeDM(event)">
+<div class="dm">
+<div class="dm-title"><div class="dm-title-ico">■</div>Detalhe da RRP</div>
+<div id="ddet"></div>
+<div style="margin-top:20px;text-align:right"><button class="btn btn-ghost" onclick="closeDM()">Fechar</button></div>
+</div>
+</div>
+<!-- IMPORT MODAL -->
+<div class="mov" id="mov" onclick="closeMov(event)">
+<div class="mm">
+<div class="mm-title">Importar nova base de dados</div>
+<div class="mm-sub">Carregue um arquivo Excel (.xlsx) ou CSV. Todos os KPIs, gráficos e insights serão atualizados automaticamente.</div>
+<div class="dz" id="dz" onclick="document.getElementById('finp').click()" ondragleave="dzLv()" ondragover="dzOv(event)" ondrop="dzDr(event)">
+<div class="dz-ico">📂</div>
+<div class="dz-main"><b>Clique para selecionar</b> ou arraste o arquivo aqui</div>
+<div class="dz-hint">Aceita: .xlsx, .xls, .csv  ·  Máx. 10 MB</div>
+</div>
+<input accept=".xlsx,.xls,.csv" id="finp" onchange="hFile(event)" type="file"/>
+<div class="mm-acts"><button class="btn btn-ghost" onclick="closeMov()">Cancelar</button></div>
+</div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const RAW=[["Q3", "ÁREA 200", "GA247S", "2025-01", "Média", "Nota aberta", null, "Substituir/Reparar", "Válvula do plano API apresenta vazamento quando fechada"], ["Q3", "ÁREA FRIA", "GA229N1", "2025-01", "Média", "Realizado", 34, "Substituir/Reparar", "Selo apresenta consumo quando em operação (reposição a cada 10 dias)"], ["Q3", "UPGR", "GA1208", "2025-01", "Média", "Realizado", 264, "Substituir/Reparar", "Tubbing com vazamento de metanol (Termossifão)"], ["Q3", "UPGR", "GA1208S", "2025-01", "Média", "Realizado", 35, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem abaixo dos 38 kgf/cm²"], ["Q3", "COMPRESSÃO", "GA207N1", "2025-01", "Média", "Realizado", 42, "Substituir/Reparar", "Selo apresenta consumo quando em operação ( reposição a cada 07 dias)"], ["Q3", "SEL II", "GA297AX", "2025-02", "Média", "Realizado", 260, "Substituir/Reparar", "PG do plano API 12 e da descarga da bomba danificados"], ["Q3", "UPGR", "GA1208S", "2025-02", "Baixa", "Realizado", 0, "Descongelamento ", "Congelamento da sobreposta"], ["Q3", "UPGR", "GA1209", "2025-02", "Média", "Realizado", 24, "Monitoramento Diário", "Pressão no sistema de selagem do plano API 53BM está subindo acima do normal"], ["Q3", "UPGR", "GA1207", "2025-02", "Média", "Realizado", 28, "Monitoramento Diário", "Pote não apresenta congelamento, porém a pressão do sistema de selagem está um pouco abaixo da pressão adequada. ( pressão encontrada ~29kgf/cm2)"], ["Q3", "COMPRESSÃO", "GA207N1S", "2025-02", "Média", "Realizado", 93, "Substituir/Reparar", "Fluido barreira contaminado"], ["Q3", "ÁREA QUENTE", "GA203F", "2025-02", "Média", "Realizado", 26, "Programar para Retirada", "Consumo de fluído barreira (em média 1,5 l/h de consumo)"], ["Q3", "ÁREA QUENTE", "GA274A", "2025-02", "Baixa", "Realizado", 26, "Substituir/Reparar", "Vazamento do selo"], ["Q3", "UPGR", "GA1209", "2025-03", "Baixa", "Realizado", 0, "Descongelamento ", "Congelamento da sobreposta"], ["Q3", "ÁREA QUENTE", "GA205S", "2025-03", "Alta", "Realizado", 0, "Verificar/Normalizar", "Plano API 62 fechado e ou obstruído"], ["Q3", "ÁREA QUENTE", "GAT203C", "2025-03", "Média", "Realizado", 1, "Verificar/Normalizar", "Realizar complemento do flúido de barreira LA"], ["Q3", "COMPRESSÃO", "GA215", "2025-03", "Alta", "Realizado", 1, "Recirculação/Cavitação", "Temperatura alta na região da voluta"], ["Q3", "COMPRESSÃO", "GA215", "2025-03", "Alta", "Realizado", 2, "Recirculação/Cavitação", "Temperatura alta na região da voluta (acima aprox. 25°C)"], ["Q3", "ÁREA QUENTE", "GA208B", "2025-03", "Baixa", "Realizado", 2, "Limpeza", "Filtro Y do plano API 12 obstrução"], ["Q3", "UPGR", "GA1207S", "2025-03", "Média", "Realizado", 6, "Substituir/Reparar", "Linha SW / RW obstruída e ou vávlulas de abertura / fechamento danificadas. Não sai água para descongelar sobreposta do selo  e tembém no sistema de dreno do pote de selagem"], ["Q3", "ÁREA QUENTE", "GA203F", "2025-03", "Média", "Realizado", 2, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem LOA 3,0 kgf/cm² / Pressão no sistema de selagem LA 6,5 kgf/cm²"], ["Q3", "COMPRESSÃO", "GA251", "2025-03", "Média", "Realizado", 0, "Verificar/Normalizar", "Bomba em processo de  cavitação, descarga está com pressão menor do encontrado no dia a dia"], ["Q3", "COMPRESSÃO", "GA251S", "2025-03", "Média", "Realizado", 0, "Verificar/Normalizar", "Bomba em processo de  cavitação, descarga está com pressão menor do encontrado no dia a dia"], ["Q3", "ÁREA QUENTE", "GAT203G", "2025-03", "Alta", "Realizado", 5, "Monitoramento Diário", "Selo LOA apresenta consumo do fluído de barreira, aproximadamente 1,0 l/h"], ["Q3", "ÁREA FRIA", "GA229NS1", "2025-04", "Alta", "Realizado", 1, "Ajustar a Pressão Plano API", "Ajustar pressão no plano API 53A, está ABAIXO do recomendado que é de  6,5 kgf/cm²"], ["Q3", "ÁREA FRIA", "GA226A", "2025-04", "Alta", "Realizado", 170, "Verificar/Normalizar", "Sem fluxo de água para descongelamento da sobreposta do selo mecânico, trocador de calor obstruído"], ["Q3", "UPGR", "GA1207", "2025-05", "Alta", "Realizado", 5, "Verificar/Normalizar", "Linhas SW/RW com obstrução e ou muito restringida, não há presença de água na linha de dreno do pote de selagem e também para descongelamento da sobreposta do selo"], ["Q3", "UPGR", "GA1207S", "2025-05", "Alta", "Realizado", 5, "Verificar/Normalizar", "Linhas SW/RW com obstrução e ou muito restringida, não há presença de água na linha de  dreno do pote de selagem e também para descongelamento da sobreposta do selo"], ["Q3", "UPGR", "GA1208", "2025-05", "Alta", "Realizado", 5, "Verificar/Normalizar", "Linhas SW/RW com obstrução e ou muito restringida, não há presença de água na linha de  dreno do pote de selagem e também para descongelamento da sobreposta do selo, sistema de selagem com  pressão abaixo do ideal"], ["Q3", "ÁREA FRIA", "GA229N1", "2025-05", "Média", "Realizado", 8, "Programar para Retirada", "Nivel pote de selagem baixo, realizar complemento do fluído de barreira. Selo com vazamento pode ser inserido na programação para substituíção "], ["Q3", "ÁREA QUENTE", "GA203F", "2025-05", "Alta", "Realizado", 2, "Verificar/Normalizar", "Amperagem abaixo do normal"], ["Q3", "ÁREA QUENTE", "GA203F", "2025-05", "Média", "Realizado", 4, "Elétrica", "Indicação da amperagem abaixo do normal"], ["Q3", "UPGR", "GA1209", "2025-05", "Alta", "Realizado", 0, "Verificar/Normalizar", "Realizar complemento do fluido de barreira no reservatório"], ["Q3", "ÁREA FRIA", "GA229NS1", "2025-05", "Alta", "Realizado", 3, "Verificar/Normalizar", "Ajustar pressão no plano API 53A, está ABAIXO do recomendado que é de  6,5 kgf/cm²"], ["Q3", "COMPRESSÃO", "GA215S", "2025-05", "Alta", "Realizado", 3, "Operacional", "Voluta apresenta 35°C acima do normalmente encontrado no dia a dia"], ["Q3", "ÁREA QUENTE", "GA203F", "2025-05", "Média", "Realizado", 0, "Substituir/Reparar", "Bomba de reasbastecimento manual se encontra travada (LA)"], ["Q3", "UPGR", "GA1207S", "2025-05", "Baixa", "Realizado", 0, "Descongelar", "Sobreposta congelada"], ["Q3", "COMPRESSÃO", "GA215", "2025-05", "Alta", "Realizado", 6, "Operacional", "Voluta apresenta 30°C acima do normalmente encontrado no dia a dia."], ["Q3", "ÁREA FRIA", "GA2024S", "2025-05", "Alta", "Realizado", 3, "Operacional", "Pressão no plano API 53B, abaixo do recomendado que é entre 36 - 38kgf/cm²"], ["Q3", "ÁREA QUENTE", "GA203F", "2025-05", "Alta", "Realizado", 0, "Substituir/Reparar", "Consumo do fluído barreira LOA"], ["Q3", "ÁREA QUENTE", "GAT203G", "2025-05", "Alta", "Realizado", 8, "Acompanhamento da Evolução", "Consumo do fluido de barreira selo LA"], ["Q3", "COMPRESSÃO", "GA207N1", "2025-05", "Alta", "Realizado", 0, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem Plano 52A, está abaixo do ideal, que deve ficar entre 6,5 e 7,5 kgf/cm "], ["Q3", "UPGR", "GA1209", "2025-05", "Média", "Realizado", 21, "Substituir/Reparar", "Vazamento do selo mecânico. Apresenta consumo excessivo do fluido de barreira, será inserida na programação para manutenção"], ["Q3", "ÁREA QUENTE", "GA206NS", "2025-06", "Média", "Realizado", 26, "Verificar/Normalizar", "Nivel do fluído de barreira baixo, realizar complemento (por oportunidade)"], ["Q3", "ÁREA FRIA", "GA2024", "2025-06", "Média", "Realizado", 2, "Descongelar", "Sobreposta congelada, realizar descongelamento com vapor e deixar o mesmo alinhado para sobreposta do selo"], ["Q3", "COMPRESSÃO", "GA215S", "2025-06", "Alta", "Realizado", 3, "Operacional", "Bomba com baixa pressão na descarga, ocasionando cavitação"], ["Q3", "COMPRESSÃO", "GA207N1S", "2025-06", "Média", "Realizado", 5, "Instrumentação", "Indicação  no PG analógico e digital estão com marcações diferentes, favor solicitarem verificação"], ["Q3", "UPGR", "GA1207", "2025-06", "Média", "Realizado", 62, "Acompanhamento da Evolução", "Pote apresenta congelamento, pressão no sistema de selagem 25kgf/cm, aplicador de vapor alinhado"], ["Q3", "ÁREA FRIA", "GA224S", "2025-06", "Baixa", "Realizado", 0, "Descongelar", "Sobreposta congelada, linha de quench fechada. Realizei aberura e descongelamento."], ["Q3", "ÁREA QUENTE", "GA270S", "2025-06", "Alta", "Realizado", 3, "Operacional", "Verificar condições opeeracionais do equipamento"], ["Q3", "ÁREA FRIA", "GA2020", "2025-06", "Média", "Realizado", 117, "Instrumentação", "Substituir PG com indicação falsa (PG-29904BX)"], ["Q3", "ÁREA FRIA", "GA225NS", "2025-06", "Alta", "Realizado", 1, "Descongelar", "Pote LOA apresenta congelamento. Nivel baixo e alto sem alarme. Pressão no sistema selagem ok. Verificarem recicurlação de água do pote, se não obstrução e eou válvula fechada."], ["Q3", "COMPRESSÃO", "GA207NS1", "2025-06", "Média", "Realizado", 0, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem Plano 52A, está abaixo do ideal, que deve ficar entre 6,5 e 7,5 kgf/cm "], ["Q3", "COMPRESSÃO", "GA251", "2025-07", "Média", "Realizado", 3, "Operacional", "Pressão baixa na descarga, equipamento cavitando"], ["Q3", "COMPRESSÃO", "GA215", "2025-07", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 obstrução"], ["Q3", "COMPRESSÃO", "GA207N1", "2025-07", "Média", "Realizado", 0, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem Plano 52A, está abaixo do ideal, que deve ficar entre 6,5 e 7,5 kgf/cm "], ["Q3", "COMPRESSÃO", "GA207NS1", "2025-07", "Média", "Realizado", 0, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem Plano 52A, está abaixo do ideal, que deve ficar entre 6,5 e 7,5 kgf/cm "], ["Q3", "ÁREA QUENTE", "GA203F", "2025-07", "Média", "Realizado", 0, "Verificar/Normalizar", "Pote LA - Nivel do fluido de barreira não está visível "], ["Q3", "ÁREA QUENTE", "GA206NS", "2025-07", "Média", "Realizado", 1, "Acompanhamento da Evolução", "Fluido barreira contaminado"], ["Q3", "ÁREA QUENTE", "GA203D", "2025-07", "Alta", "Realizado", 0, "Verificar/Normalizar", "Verificar as condições linha de resfriamento RW/SW dos mancais e sistema de selagem"], ["Q3", "ÁREA QUENTE", "GA203A", "2025-07", "Média", "Realizado", 0, "Verificar/Normalizar", "Nível baixo do fluido de barreira LOA"], ["Q3", "COMPRESSÃO", "GA207NS1", "2025-07", "Alta", "Realizado", 0, "Verificar/Normalizar", "Pressão no sistema de selagem Plano 53A, está abaixo do ideal, que deve ficar entre 6,5 e 7,5 kgf/cm "], ["Q3", "COMPRESSÃO", "GA215S", "2025-07", "Alta", "Realizado", 1, "Operacional", "Produto recirculando na voluta da bomba, ocasionando aumento de temperatura na região"], ["Q3", "ÁREA QUENTE", "GA270S", "2025-08", "Alta", "Realizado", 3, "Operacional", "Pressão no sistema de selagem Plano 53A, está abaixo do ideal, que deve ficar entre 5,5 e 7,0 kgf/cm "], ["Q3", "COMPRESSÃO", "GA207NS1", "2025-08", "Alta", "Realizado", 0, "Verificar/Normalizar", "Pressão no sistema de selagem Plano 53A, está abaixo do ideal, que deve ficar entre 5,5 e 7,0 kgf/cm "], ["Q3", "COMPRESSÃO", "GA215", "2025-08", "Alta", "Realizado", 0, "Operacional", " Baixa pressão na descarga"], ["Q3", "COMPRESSÃO", "GA215S", "2025-08", "Alta", "Realizado", 0, "Operacional", "Produto recirculando na voluta da bomba, ocasionando aumento de temperatura na região. Baixa pressão na descarga"], ["Q3", "ÁREA QUENTE", "GA270S", "2025-08", "Alta", "Realizado", 2, "Operacional", "Produto recirculando na voluta da bomba, ocasionando aumento de temperatura na região. Baixa pressão na descarga (APROX. 2,0 kgf/cm² abaixo do normalmente encontrado no dia a dia)"], ["Q3", "ÁREA QUENTE", "GA208C", "2025-08", "Média", "Realizado", 10, "Programar para Retirada", "Vibração alta no mancal LOA"], ["Q3", "ÁREA QUENTE", "GA208D", "2025-08", "Média", "Realizado", 6, "Programar para Retirada", "Vamento externo selo LA (Vibração excessiva Laudo Preditivo)"], ["Q3", "ÁREA QUENTE", "GA270", "2025-08", "Alta", "Realizado", 1, "Operacional", "Produto recirculando na voluta da bomba, ocasionando aumento de temperatura na região. Baixa pressão na descarga (APROX. 3,0 kgf/cm² abaixo do normalmente encontrado no dia a dia)"], ["Q3", "COMPRESSÃO", "GA251", "2025-08", "Alta", "Realizado", 0, "Operacional", "Bomba apresenta cavitação excessiva"], ["Q3", "ÁREA FRIA", "GA226A", "2025-08", "Alta", "Realizado", 7, "Descongelar", "Sobrepostas apresentam congelamento excessivo e as linhas para descongelamento estão obstruídas"], ["Q3", "ÁREA QUENTE", "GA203E", "2025-08", "Média", "Realizado", 0, "Acompanhamento da Evolução", "Completar o nível do fluido de barreira LOA ( aprox. 4lts )"], ["Q3", "ÁREA QUENTE", "GAT203G", "2025-08", "Média", "Realizado", 0, "Acompanhamento da Evolução", "Completado o nível do fluido de barreira LOA ( aprox. 4lts )"], ["Q3", "COMPRESSÃO", "GA215", "2025-08", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 obstrução"], ["Q3", "ÁREA QUENTE", "GA203D", "2025-08", "Média", "Realizado", 0, "Verificar/Normalizar", "Completar o nível do fluido de barreira LOA ( aprox. 4lts )"], ["Q3", "ÁREA QUENTE", "GA215S", "2025-08", "Média", "Realizado", 2, "Operacional", "Temperatura alta na região da voluta, fluido bombeado recirculando."], ["Q3", "UPGR", "GA1207", "2025-08", "Alta", "Realizado", 1, "Ajustar a Pressão Plano API", "Ajustar pressão no plano API 53B, está ABAIXO do recomendado "], ["Q3", "COMPRESSÃO", "GA251", "2025-08", "Alta", "Realizado", 3, "Operacional", "Bomba cavitando"], ["Q3", "COMPRESSÃO", "GA251S", "2025-08", "Alta", "Realizado", 3, "Operacional", "Bomba cavitando"], ["Q3", "UPGR", "GA1209", "2025-09", "Média", "Realizado", 19, "Substituir/Reparar", "Bexiga do acomulador está furada"], ["Q3", "COMPRESSÃO", "GA215", "2025-09", "Alta", "Realizado", 0, "Substituir/Reparar", "Filtro Y do plano API 12 obstrução"], ["Q3", "COMPRESSÃO", "GA215S", "2025-09", "Alta", "Realizado", 0, "Verificar/Normalizar", ""], ["Q3", "ÁREA QUENTE", "GAT202", "2025-09", "Alta", "Realizado", 0, "Verificar/Normalizar", "Verificar os filtro Y do plano API 12 "], ["Q3", "COMPRESSÃO", "GA215", "2025-09", "Alta", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 obstrução"], ["Q3", "COMPRESSÃO", "GA215S", "2025-09", "Alta", "Realizado", 15, "Acompanhamento da Evolução", "Selo apresenta vazamento para ATM"], ["Q3", "ÁREA FRIA", "GA2024S", "2025-09", "Alta", "Realizado", 0, "Verificar/Normalizar", "Pressão no sistema de selagem Plano 53A, está abaixo do ideal, que deve ficar entre 34 e 38,0 kgf/cm²"], ["Q3", "ÁREA FRIA", "GA201AS", "2025-09", "Alta", "Realizado", 295, "Instrumentação", "Substituir PG danificado (PG-2721)"], ["Q3", "ÁREA FRIA", "GA226A", "2025-09", "Média", "Realizado", 1, "Descongelar", "Sobreposta LA congelada, realizar desocngelamento"], ["Q3", "ÁREA FRIA", "GA1253", "2025-09", "Média", "Realizado", 0, "Descongelar", "Sobreposta congelada, realizar desocngelamento"], ["Q3", "UPGR", "GA1207S", "2025-09", "Alta", "Pendente", null, "Substituir/Reparar", "Válvula de abertura de linha para descongelamento da sobreposta do selo, está danificada."], ["Q3", "COMPRESSÃO", "GA215", "2025-09", "Alta", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução"], ["Q3", "ÁREA FRIA", "GA247A", "2025-09", "Média", "Realizado", 7, "Acompanhamento da Evolução", "Selo apresenta vazamento para ATM, qdo equipamento está em stand-by"], ["Q3", "ÁREA FRIA", "GA229NS1", "2025-10", "Média", "Realizado", 4, "Verificar/Normalizar", "Leitura da pressão diferente entre PG analógico e o digital"], ["Q3", "ÁREA QUENTE", "GA270S", "2025-10", "Alta", "Realizado", 3, "Verificar/Normalizar", "Pote contaminado, providenciar substyituição do fluido contaminado"], ["Q3", "UPGR", "GA1209", "2025-10", "Baixa", "Realizado", 0, "Verificar/Normalizar", "Efetuar descongelamento da sobreposta"], ["Q3", "ÁREA QUENTE", "GAT203G", "2025-10", "Alta", "Realizado", 1, "Instrumentação", "Ajustar calibração do LT 20124 / LT20125"], ["Q3", "ÁREA FRIA", "GA228NS", "2025-10", "Média", "Realizado", 31, "Acompanhamento da Evolução", "Selo apresenta pequeno vazamento para ATM, quando em stand-by"], ["Q3", "UPGR", "GA1207", "2025-10", "Alta", "Realizado", 0, "Descongelar", "Efetuar descongelamento do termossifão"], ["Q3", "ÁREA QUENTE", "GA270S", "2025-10", "Média", "Realizado", 30, "Acompanhamento da Evolução", "Pequeno vazamento fluído de barreira para ATM"], ["Q3", "UPGR", "GA1208", "2025-10", "Alta", "Realizado", 1, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem Plano 53B, está abaixo do ideal, que deve ficar entre 35 e 38,0 kgf/cm²"], ["Q3", "UPGR", "GA1207", "2025-10", "Média", "Realizado", 3, "Ajustar a Pressão Plano API", "Pote congelando, aplicador de vapor alinhado"], ["Q3", "ÁREA QUENTE", "GA206NS", "2025-10", "Média", "Realizado", 40, "Programar para Retirada", "Selo apresenta consumo excessivo "], ["Q3", "COMPRESSÃO", "GA207NS1", "2025-11", "Alta", "Realizado", 2, "Verificar/Normalizar", "Pressão baixa no sistema de selagem, pressão de N2 abaixo do ideal"], ["Q3", "COMPRESSÃO", "GA215S", "2025-11", "Alta", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução"], ["Q3", "COMPRESSÃO", "GA215", "2025-11", "Alta", "Realizado", 2, "Operacional", "Temperatura alta na região da voluta, fluido bombeado recirculando."], ["Q3", "ÁREA FRIA", "GA229NS1", "2025-11", "Alta", "Realizado", 5, "Operacional", "Garrafas de nitrogênio vazias, necessita substituição"], ["Q3", "COMPRESSÃO", "GA215", "2025-11", "Alta", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução"], ["Q3", "COMPRESSÃO", "GA215S", "2025-11", "Alta", "Realizado", 2, "Operacional", "Temperatura alta na região da voluta, fluido bombeado recirculando."], ["Q3", "ÁREA FRIA", "GA9311", "2025-12", "Média", "Realizado", 19, "Substituir/Reparar", "Vazamento Selo Mecânico"], ["Q3", "COMPRESSÃO", "GA215S", "2025-12", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução"], ["Q3", "ÁREA QUENTE", "GA203F", "2025-12", "Alta", "Realizado", 0, "Verificar/Normalizar", "Temperatura alta no pote de selagem, realizar checagem linhas SW/RW"], ["Q3", "COMPRESSÃO", "GA215S", "2025-12", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução"], ["Q3", "COMPRESSÃO", "GA215S", "2025-12", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução, bomba apresenta recirtculação do fluído bombeado na região da voluta"], ["Q3", "ÁREA FRIA", "GA2024S", "2026-01", "Alta", "Realizado", 365, "Ajustar a Pressão Plano API", "Pressão baixa no sistema de selagem, pressão de N2 abaixo do ideal"], ["Q3", "ÁREA FRIA", "GA2024S", "2026-01", "Alta", "Realizado", 17, "Ajustar a Pressão Plano API", "Realizar conferência nas conexões externas do pote, para tentar encontar possível causa da queda de pressão."], ["Q3", "UPGR", "GA1251S", "2026-01", "Média", "Realizado", 15, "Programar para Retirada", "Vazamento do selo mecânico para ATM LOA"], ["Q3", "COMPRESSÃO", "GA215S", "2026-03", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução, bomba apresenta recirtculação do fluído bombeado na região da voluta"], ["Q3", "COMPRESSÃO", "GA215S", "2026-03", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano API 12 com obstrução, bomba apresenta recirtculação do fluído bombeado na região da voluta"], ["Q3", "ÁREA FRIA", "GA222S", "2026-03", "Média", "Realizado", 14, "Programar para Retirada", "Equipamento com loto, selo com vazamento para ATM (probabilidade de problema ocasionado por operação incorreta)"], ["Q3", "ÁREA QUENTE", "GA208S", "2026-03", "Alta", "Realizado", 0, "Verificar/Normalizar", "Caixa do mancal LOA apresenta resíduo, que pode ser oléo do mancal"], ["Q3", "COMPRESSÃO", "GA215S", "2026-03", "Alta", "Realizado", 3, "Verificar/Normalizar", "Pressão baixa  na descarga, fluido bombeado recirculando na voluta. Aumento de temperatura na região do selo"], ["Q3", "ÁREA QUENTE", "GA208S", "2026-03", "Alta", "Realizado", 109, "Verificar/Normalizar", "Plano API obstruido"], ["Q3", "ÁREA QUENTE", "GA270", "2026-03", "Alta", "Pendente", null, "Verificar/Normalizar", "Pressão baixa na descarga"], ["Q3", "ÁREA FRIA", "GA297BX", "2026-03", "Alta", "Realizado", 3, "Verificar/Normalizar", "Equipamento apresenta cavitação"], ["Q3", "ÁREA QUENTE", "GA251", "2026-03", "Alta", "Realizado", 3, "Verificar/Normalizar", "Equipamento apresenta cavitação"], ["Q3", "ÁREA QUENTE", "GA215", "2026-03", "Alta", "Realizado", 2, "Verificar/Normalizar", "Alta temperatura na voluta, bomba recirculando e operando em paralelo"], ["Q3", "ÁREA FRIA", "GA230S", "2026-03", "Média", "Realizado", 24, "Substituir/Reparar", "Vazamento do selo mecânico para  ATM"], ["Q3", "ÁREA QUENTE", "GA251", "2026-03", "Média", "Realizado", 0, "Verificar/Normalizar", "Efetuar retrolavagem no pote de selagem"], ["Q3", "COMPRESSÃO", "GA215S", "2026-03", "Alta", "Realizado", 0, "Verificar/Normalizar", "Filtro Y do plano Api 12 obstruído"], ["Q3", "COMPRESSÃO", "GA215", "2026-03", "Alta", "Realizado", 1, "Verificar/Normalizar", "Filtro Y do plano Api 12 obstruído"], ["Q3", "UPGR", "GA1207S", "2026-04", "Média", "Realizado", 2, "Descongelar", "Sobreposta Congelada"], ["Q3", "COMPRESSÃO", "GA215", "2026-04", "Alta", "Realizado", 2, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "UPGR", "GA1207S", "2026-04", "Baixa", "Realizado", 2, "Verificar/Normalizar", "Sobreposta Congelada"], ["Q3", "UPGR", "GA1209S", "2026-04", "Baixa", "Realizado", 1, "Verificar/Normalizar", "Sobreposta Congelada"], ["Q3", "UPGR", "GA1208", "2026-04", "Alta", "Realizado", 3, "Verificar/Normalizar", "Pressão no sistema de selagem Plano 53B, está abaixo do ideal, que deve ficar entre 35 e 38,0 kgf/cm²"], ["Q3", "UPGR", "GA1207S", "2026-04", "Alta", "Realizado", 4, "Verificar/Normalizar", "Pressão no sistema de selagem Plano 53B, está abaixo do ideal, que deve ficar entre 35 e 38,0 kgf/cm²"], ["Q3", "UPGR", "GA1209", "2026-04", "Alta", "Realizado", 4, "Verificar/Normalizar", "Descongelar sobreposta e reabastecer reservatório de metanol"], ["Q3", "ÁREA QUENTE", "GA215S", "2026-04", "Alta", "Realizado", 1, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "UPGR", "GA1207", "2026-05", "Média", "Realizado", 0, "Verificar/Normalizar", "Válvula da linha de descongelamento da sobreposta está danificada e ou obstruída, equipamento em stand-by"], ["Q3", "UPGR", "GA1207S", "2026-05", "Alta", "Realizado", 4, "Ajustar a Pressão Plano API", "Pressão no sistema de selagem Plano 53B, está abaixo do ideal, que deve ficar entre 35 e 38,0 kgf/cm² ( em operação )"], ["Q3", "ÁREA FRIA", "GA229N1", "2026-05", "Alta", "Realizado", 1, "Operacional", "Garrafas de nitrogênio vazias, necessita substituição"], ["Q3", "COMPRESSÃO", "GA215", "2026-05", "Alta", "Realizado", 0, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "COMPRESSÃO", "GA215S", "2026-05", "Alta", "Realizado", 0, "Verificar/Normalizar", "Garrafas de nitrogênio vazias, necessita substituição"], ["Q3", "ÁREA QUENTE", "GA270S", "2026-05", "Alta", "Realizado", 12, "Instrumentação", "PG do pote de selagem apresenta oscilação"], ["Q3", "ÁREA QUENTE", "GA-208C", "2026-05", "Alta", "Pendente", null, "Verificar/Normalizar", "Obsttrução na linha de selagem"], ["Q3", "COMPRESSÃO", "GA215", "2026-05", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "COMPRESSÃO", "GA215", "2026-06", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "ÁREA QUENTE", "GA203F", "2026-06", "Alta", "Realizado", 3, "Nota Aberta", "Vazamento pela linha do pote de selagem na entrada do selo"], ["Q3", "COMPRESSÃO", "GA215", "2026-06", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "UPGR", "GA1207", "2026-06", "Média", "Realizado", 2, "Verificar/Normalizar", "Pressão no sistema de selagem Plano 53B, está abaixo do ideal, que deve ficar entre 35 e 38,0 kgf/cm² ( stand-by )"], ["Q3", "UPGR", "GA1207S", "2026-06", "Média", "Realizado", 3, "Verificar/Normalizar", "Pressão no sistema de selagem Plano 53B, está abaixo do ideal, que deve ficar entre 35 e 38,0 kgf/cm² ( em operação )"], ["Q3", "AREA FRIA", "GA222A", "2026-06", "Média", "Realizado", 10, "Programar para Retirada", "Selo apresenta vazamento do fluido de barreira para ATM"], ["Q3", "ÁREA QUENTE", "GA203E", "2026-06", "Média", "Em Andamento", null, "Monitoramento Diário", "Selo LA e ou LOA apresenta vazamento do fluido de barreira para ATM"], ["Q3", "COMPRESSÃO", "GA215S", "2026-07", "Alta", "Realizado", 3, "Monitoramento Diário", "Apresenta alta temperatura na voluta e no selo mecânico, pressão baixa na descarga, trabalhando em paralelo"], ["Q3", "ÁREA QUENTE", "GA203A", "2026-07", "Alta", "Realizado", 1, "Monitoramento Diário", "Pressão baixa na sucção e descarga, equipamento cavitando."], ["Q3", "COMPRESSÃO", "GA215", "2026-07", "Média", "Realizado", 1, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "ÁREA QUENTE", "GA203S", "2026-07", "Média", "Pendente", null, "Substituir/Reparar", "Válvula reguladora da pressão do N2 no sistema de selagem danificada"], ["Q3", "COMPRESSÃO", "GA215", "2026-07", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "COMPRESSÃO", "GA215S", "2026-07", "Média", "Realizado", 0, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "AREA QUENTE", "GA203E", "2026-07", "Alta", "Realizado", 0, "Verificar/Normalizar", "Realizar reabastecimento do pote de selagem LOA"], ["Q3", "COMPRESSÃO", "GA215", "2026-07", "Média", "Pendente", null, "Verificar/Normalizar", "Filtro Y obstruído"], ["Q3", "UPGR", "GA1207S", "2026-07", "Alta", "Pendente", null, "Verificar/Normalizar", "Carcaça da bomba congelada"]];
+const REC=[["Verificar/Normalizar", 62], ["Operacional", 20], ["Substituir/Reparar", 15], ["Ajustar a Pressão Plano API", 13], ["Acompanhamento da Evolução", 11], ["Descongelar", 9], ["Programar para Retirada", 7], ["Instrumentação", 6], ["Monitoramento Diário", 3], ["Descongelamento ", 2], ["Recirculação/Cavitação", 2], ["Limpeza", 1], ["Elétrica", 1]];
+
+
+
+const G="#27714A",GB="#E5F5EE",GM="#3A9464";
+const A="#A86E22",AB="#FDF2E0";
+const R="#AD2E2E",RB="#FAE8E8";
+const P="#4E4480",PB="#EBE8F6";
+const O="#4F6835",OB="#ECF2E2";
+const T="#256A62",TB="#E2F3F1";
+const BR="#6E3E1C",BRB="#F5E8DC";
+const BL="#284F82",BLB="#E3EBF6";
+const GR="#6B6358",GRB="#EDEBE6";
+const PAL=[A,G,BL,R,P,O,T,BR];
+
+let all=RAW.map(r=>{
+  const t=r[6];
+  const tempo=(t===null||t===undefined||t==='')?null:parseFloat(t);
+  return{unidade:r[0],setor:r[1],tag:r[2],mes:r[3],prio:r[4],status:r[5],tempo:isNaN(tempo)?null:tempo,rec:r[7]||'',anomalia:r[8]||''};
+});
+function nrmTxt(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
+function canonSetor(arr){
+  const groups={};
+  arr.forEach(d=>{
+    const k=nrmTxt(d.setor);
+    groups[k]=groups[k]||{};
+    groups[k][d.setor]=(groups[k][d.setor]||0)+1;
+  });
+  const canon={};
+  Object.keys(groups).forEach(k=>{
+    let best=null,bestCount=-1;
+    Object.keys(groups[k]).forEach(v=>{
+      if(groups[k][v]>bestCount){best=v;bestCount=groups[k][v]}
+    });
+    canon[k]=best;
+  });
+  arr.forEach(d=>{d.setor=canon[nrmTxt(d.setor)]});
+}
+canonSetor(all);
+let filt=[...all];
+let CH={};
+
+function updatePeriodPill(){
+  const meses=[...new Set(all.map(d=>d.mes))].filter(m=>m&&m!=='N/A').sort();
+  const el=document.getElementById('periodPill');
+  if(!el)return;
+  if(!meses.length){el.textContent='Sem dados';return}
+  const fmt=m=>{const[y,mo]=m.split('-');const nomes=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];return nomes[parseInt(mo,10)-1]+' '+y};
+  const ini=meses[0],fim=meses[meses.length-1];
+  el.textContent=ini===fim?fmt(ini):fmt(ini)+' \u2013 '+fmt(fim);
+}
+
+function init(){
+  const units=[...new Set(all.map(d=>d.unidade))].sort();
+  units.forEach(u=>{const o=document.createElement('option');o.value=u;o.text=u;document.getElementById('fU').appendChild(o)});
+  const sets=[...new Set(all.map(d=>d.setor))].sort();
+  sets.forEach(s=>{const o=document.createElement('option');o.value=s;o.text=s;document.getElementById('fS').appendChild(o)});
+  const mes=[...new Set(all.map(d=>d.mes))].sort();
+  mes.forEach(m=>{const o=document.createElement('option');o.value=m;o.text=m;document.getElementById('fM').appendChild(o)});
+  const now=new Date();
+  document.getElementById('fdate').textContent=now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  updatePeriodPill();
+  applyF();
+}
+
+function applyF(){
+  const u=document.getElementById('fU').value;
+  const s=document.getElementById('fS').value;
+  const p=document.getElementById('fP').value;
+  const st=document.getElementById('fSt').value;
+  const m=document.getElementById('fM').value;
+  const pmap={Alta:"Alta",Media:"M\u00e9dia",Baixa:"Baixa"};
+  filt=all.filter(d=>(!u||d.unidade===u)&&(!s||d.setor===s)&&(!p||(d.prio===(pmap[p]||p)||d.prio===p))&&(!st||d.status===st)&&(!m||d.mes===m));
+  document.getElementById('rc').textContent=filt.length;
+  rHero();rKPIs();rCharts();rInsights();rTable();
+}
+function resetF(){['fU','fS','fP','fSt','fM'].forEach(id=>document.getElementById(id).value='');applyF()}
+
+// ── HERO ──────────────────────────────────────────────────────────────────────
+function rHero(){
+  const d=filt,n=d.length||all.length;
+  const real=d.filter(x=>x.status==="Realizado").length;
+  const pend=d.filter(x=>x.status!=="Realizado").length;
+  const sets=new Set(d.map(x=>x.setor)).size;
+  const rPct=n?Math.round(real/n*100):0;
+  document.getElementById('h-total').textContent=n;
+  document.getElementById('h-real').textContent=real;
+  document.getElementById('h-pend').textContent=pend;
+  document.getElementById('h-set').textContent=sets;
+  const circ=289,off=circ*(1-rPct/100);
+  setTimeout(()=>{
+    const hr=document.getElementById('hring');if(hr)hr.style.strokeDashoffset=off;
+    const ht=document.getElementById('hring-txt');if(ht)ht.textContent=rPct+'%';
+    const hs=document.getElementById('health-score');
+    if(hs){
+      if(rPct>=90){hs.style.background='rgba(58,148,100,.25)';hs.style.color='#5FC98A';hs.textContent='Saude Excelente'}
+      else if(rPct>=70){hs.style.background='rgba(168,110,34,.2)';hs.style.color='#DBA050';hs.textContent='Saude Boa'}
+      else{hs.style.background='rgba(173,46,46,.2)';hs.style.color='#E07070';hs.textContent='Requer Atencao'}
+    }
+  },100);
+}
+
+// ── KPIs ──────────────────────────────────────────────────────────────────────
+function rKPIs(){
+  const d=filt,n=d.length;
+  if(!n){document.getElementById('kgrid').innerHTML='<div style="grid-column:span 6;text-align:center;padding:40px;color:var(--txt3);font-size:13px">Nenhum dado para este filtro</div>';return}
+  const real=d.filter(x=>x.status==="Realizado").length;
+  const pend=d.filter(x=>x.status!=="Realizado").length;
+  const alta=d.filter(x=>x.prio==="Alta").length;
+  const ts=d.filter(x=>x.tempo!==null&&x.tempo!==undefined&&!isNaN(Number(x.tempo))&&Number(x.tempo)>=0).map(x=>Number(x.tempo));
+  const avg=ts.length?+(ts.reduce((a,b)=>a+b,0)/ts.length).toFixed(1):null;
+  const sets=new Set(d.map(x=>x.setor)).size;
+  const rPct=Math.round(real/n*100),aPct=Math.round(alta/n*100);
+  const circ=314.2,off=circ*(1-rPct/100);
+  setTimeout(()=>{const r2=document.getElementById('ring2');if(r2)r2.style.strokeDashoffset=off;document.getElementById('rpct').textContent=rPct+'%'},80);
+  const KS=[
+    {tag:"Total de RRPs",val:n,sub:"registros",col:A,bg:AB,ico:"&#9632;",bw:100,bc:A,badge:null},
+    {tag:"Realizadas",val:real,sub:rPct+"% concluidas",col:G,bg:GB,ico:"&#10003;",bw:rPct,bc:G,badge:rPct>=90?{t:"Excelente",bg:GB,c:G}:{t:"Bom",bg:GB,c:G}},
+    {tag:"Pendentes",val:pend,sub:Math.round(pend/n*100)+"% em aberto",col:pend>5?R:A,bg:pend>5?RB:AB,ico:"&#9679;",bw:Math.round(pend/n*100),bc:pend>5?R:A,badge:pend===0?{t:"Zerado",bg:GB,c:G}:pend<=3?{t:"Atencao",bg:AB,c:A}:{t:"Critico",bg:RB,c:R}},
+    {tag:"Prioridade Alta",val:alta,sub:aPct+"% das RRPs",col:R,bg:RB,ico:"&#9650;",bw:aPct,bc:R,badge:aPct>60?{t:"Critico",bg:RB,c:R}:{t:"Controlado",bg:GB,c:G}},
+    {tag:"Tempo Medio",val:avg!=null?avg+"d":"--",sub:"dias p/ implementar",col:P,bg:PB,ico:"&#9201;",bw:avg!=null?Math.min(100,avg/50*100):0,bc:P,badge:avg!=null?avg<15?{t:"Rapido",bg:GB,c:G}:avg<30?{t:"Moderado",bg:AB,c:A}:{t:"Lento",bg:RB,c:R}:null},
+    {tag:"Setores Ativos",val:sets,sub:"areas com RRPs",col:T,bg:TB,ico:"&#9654;",bw:sets/6*100,bc:T,badge:null}
+  ];
+  document.getElementById('kgrid').innerHTML=KS.map((k,i)=>`
+    <div class="kpi" style="animation-delay:${i*60}ms">
+      <div class="kpi-top-stripe" style="background:${k.col}"></div>
+      <div class="kpi-head">
+        <div class="kpi-ico" style="background:${k.bg};color:${k.col}">${k.ico}</div>
+        ${k.badge?`<div class="kpi-badge" style="background:${k.badge.bg};color:${k.badge.c}">${k.badge.t}</div>`:''}
+      </div>
+      <div class="kpi-val" id="kv${i}">${k.val}</div>
+      <div class="kpi-lbl">${k.sub}</div>
+      <div class="kpi-bar"><div class="kpi-fill" id="kf${i}" style="background:${k.bc}"></div></div>
+    </div>`).join('');
+  setTimeout(()=>{
+    KS.forEach((k,i)=>{
+      const b=document.getElementById('kf'+i);if(b)b.style.width=Math.round(k.bw)+'%';
+      const e=document.getElementById('kv'+i);
+      if(e&&typeof k.val==='number'&&Number.isInteger(k.val)&&k.val>0){
+        let c=0,dur=700,step=Math.max(16,dur/k.val);
+        const iv=setInterval(()=>{c+=Math.ceil(k.val/(dur/step));if(c>=k.val){c=k.val;clearInterval(iv)}e.textContent=c},step);
+      }
+    });
+  },100);
+}
+
+// ── CHARTS ────────────────────────────────────────────────────────────────────
+function dc(id){if(CH[id]){CH[id].destroy();delete CH[id]}}
+const GRD='rgba(0,0,0,.04)',TK='#9E9487';
+function bO(ia){return{responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{display:false},tooltip:{backgroundColor:'#18150F',titleColor:'#fff',bodyColor:'rgba(255,255,255,.65)',padding:10,cornerRadius:8,titleFont:{family:'Syne',weight:'700',size:12},bodyFont:{family:'Inter',size:12}}},
+  scales:{x:{grid:{color:ia==='y'?GRD:'transparent'},ticks:{color:TK,font:{size:11,family:'Inter'}}},
+          y:{grid:{color:ia==='x'?GRD:'transparent'},ticks:{color:TK,font:{size:11,family:'Inter'}}}}}}
+
+function rCharts(){
+  const d=filt;
+  // Timeline
+  const mg={};d.forEach(r=>{if(!mg[r.mes])mg[r.mes]={R:0,P:0};if(r.status==='Realizado')mg[r.mes].R++;else mg[r.mes].P++});
+  const ms=Object.keys(mg).sort();
+  dc('cTL');
+  document.getElementById('leg-tl').innerHTML=`<span class="li"><span class="ld" style="background:${G}"></span>Realizadas</span><span class="li"><span class="ld" style="background:${A}"></span>Pendentes/Abertas</span>`;
+  const tlo=bO('x');tlo.scales.x.stacked=tlo.scales.y.stacked=true;tlo.scales.x.ticks.maxRotation=35;
+  CH['cTL']=new Chart(document.getElementById('cTL'),{type:'bar',data:{labels:ms,datasets:[
+    {label:'Realizadas',data:ms.map(m=>mg[m].R),backgroundColor:G+'CC',borderRadius:4,borderSkipped:false},
+    {label:'Pendentes',data:ms.map(m=>mg[m].P),backgroundColor:A+'CC',borderRadius:4,borderSkipped:false}
+  ]},options:tlo});
+  // Status donut
+  const sc={Realizado:0,Pendente:0,'Nota aberta':0};d.forEach(r=>sc[r.status]=(sc[r.status]||0)+1);
+  dc('cSt');
+  document.getElementById('leg-st').innerHTML=Object.entries(sc).map(([k,v])=>{const c=k==='Realizado'?G:k==='Pendente'?A:P;return`<span class="li"><span class="ld" style="background:${c}"></span>${k} <b style="color:var(--txt);margin-left:2px">${v}</b></span>`}).join('');
+  CH['cSt']=new Chart(document.getElementById('cSt'),{type:'doughnut',data:{labels:Object.keys(sc),datasets:[{data:Object.values(sc),backgroundColor:[G,A,P],borderWidth:0,hoverOffset:7}]},options:{responsive:true,maintainAspectRatio:false,cutout:'73%',plugins:{legend:{display:false}}}});
+  // Setor
+  const sg={};d.forEach(r=>{if(!sg[r.setor])sg[r.setor]={t:0,a:0};sg[r.setor].t++;if(r.prio==='Alta')sg[r.setor].a++});
+  const sl=Object.keys(sg).sort((a,b)=>sg[b].t-sg[a].t);
+  document.getElementById('ws').style.height=Math.max(200,sl.length*46+60)+'px';
+  dc('cSetor');
+  document.getElementById('leg-setor').innerHTML=`<span class="li"><span class="ld" style="background:${A}"></span>Total</span><span class="li"><span class="ld" style="background:${R}"></span>Alta Prioridade</span>`;
+  CH['cSetor']=new Chart(document.getElementById('cSetor'),{type:'bar',indexAxis:'y',data:{labels:sl,datasets:[{label:'Total',data:sl.map(s=>sg[s].t),backgroundColor:A+'BB',borderRadius:4,borderSkipped:false},{label:'Alta',data:sl.map(s=>sg[s].a),backgroundColor:R+'BB',borderRadius:4,borderSkipped:false}]},options:bO('y')});
+  // Tempo
+  const tg={};d.forEach(r=>{if(r.tempo!==null&&r.tempo!==undefined&&!isNaN(Number(r.tempo))&&Number(r.tempo)>=0){if(!tg[r.setor])tg[r.setor]=[];tg[r.setor].push(r.tempo)}});
+  const tl=Object.keys(tg).map(s=>[s,+(tg[s].reduce((a,b)=>a+b,0)/tg[s].length).toFixed(1)]).sort((a,b)=>b[1]-a[1]);
+  document.getElementById('wt').style.height=Math.max(200,tl.length*46+60)+'px';
+  dc('cTempo');
+  CH['cTempo']=new Chart(document.getElementById('cTempo'),{type:'bar',indexAxis:'y',data:{labels:tl.map(x=>x[0]),datasets:[{label:'Dias',data:tl.map(x=>x[1]),backgroundColor:P+'BB',borderRadius:4,borderSkipped:false}]},options:bO('y')});
+  // Prioridade
+  const pc={'Alta':0,'M\u00e9dia':0,'Baixa':0};d.forEach(r=>{const k=r.prio;pc[k]=(pc[k]||0)+1});
+  dc('cPrio');
+  document.getElementById('leg-prio').innerHTML=`<span class="li"><span class="ld" style="background:${R}"></span>Alta <b style="color:var(--txt);margin-left:2px">${pc['Alta']||0}</b></span><span class="li"><span class="ld" style="background:${A}"></span>M\u00e9dia <b style="color:var(--txt);margin-left:2px">${pc['M\u00e9dia']||0}</b></span><span class="li"><span class="ld" style="background:${O}"></span>Baixa <b style="color:var(--txt);margin-left:2px">${pc['Baixa']||0}</b></span>`;
+  CH['cPrio']=new Chart(document.getElementById('cPrio'),{type:'doughnut',data:{labels:['Alta','M\u00e9dia','Baixa'],datasets:[{data:[pc['Alta']||0,pc['M\u00e9dia']||0,pc['Baixa']||0],backgroundColor:[R,A,O],borderWidth:0,hoverOffset:7}]},options:{responsive:true,maintainAspectRatio:false,cutout:'73%',plugins:{legend:{display:false}}}});
+  // Recomendacoes
+  dc('cRec');const ro=bO('x');ro.scales.x.ticks.maxRotation=38;ro.scales.x.ticks.autoSkip=false;ro.scales.x.ticks.font={size:10,family:'Inter'};
+  CH['cRec']=new Chart(document.getElementById('cRec'),{type:'bar',data:{labels:REC.map(x=>x[0]),datasets:[{label:'Ocorrencias',data:REC.map(x=>x[1]),backgroundColor:O+'CC',borderRadius:4,borderSkipped:false}]},options:ro});
+  
+}
+
+// ── INSIGHTS ──────────────────────────────────────────────────────────────────
+function rInsights(){
+  const d=filt,n=d.length;
+  if(!n){document.getElementById('ifeed').innerHTML='';return}
+  const real=d.filter(x=>x.status==="Realizado").length;
+  const rPct=Math.round(real/n*100),aPct=Math.round(d.filter(x=>x.prio==="Alta").length/n*100);
+  const pend=d.filter(x=>x.status!=="Realizado").length;
+  const sg={};d.forEach(r=>sg[r.setor]=(sg[r.setor]||0)+1);
+  const topS=Object.entries(sg).sort((a,b)=>b[1]-a[1])[0];
+  const ts=d.filter(x=>x.tempo!==null&&x.tempo!==undefined&&!isNaN(Number(x.tempo))&&Number(x.tempo)>=0).map(x=>Number(x.tempo));
+  const avg=ts.length?+(ts.reduce((a,b)=>a+b,0)/ts.length).toFixed(1):null;
+  const stg={};d.forEach(r=>{if(r.tempo!==null&&r.tempo!==undefined&&!isNaN(Number(r.tempo))&&Number(r.tempo)>=0){if(!stg[r.setor])stg[r.setor]=[];stg[r.setor].push(r.tempo)}});
+  const slowS=Object.entries(stg).map(([s,ts])=>[s,ts.reduce((a,b)=>a+b,0)/ts.length]).sort((a,b)=>b[1]-a[1])[0];
+  const fastS=Object.entries(stg).map(([s,ts])=>[s,ts.reduce((a,b)=>a+b,0)/ts.length]).sort((a,b)=>a[1]-b[1])[0];
+  const ins=[
+    {sev:rPct>=90?'ok':rPct>=70?'warn':'bad',ico:'&#128200;',ib:GB,ic:GM,ttl:'Taxa de Implementacao',
+     txt:`${rPct}% das ${n} RRPs filtradas foram implementadas com sucesso. ${pend} registro${pend!==1?'s':''} ainda em aberto.`,
+     pill:rPct>=90?'Excelente':rPct>=70?'Bom':'Atencao necessaria',pb:rPct>=90?GB:rPct>=70?AB:RB,pc:rPct>=90?G:rPct>=70?A:R,
+     meta:`${real} concluidas de ${n}`},
+    {sev:aPct>60?'bad':aPct>40?'warn':'ok',ico:'&#9888;',ib:RB,ic:R,ttl:'Concentracao de Risco por Prioridade',
+     txt:`${aPct}% das RRPs sao classificadas como Alta prioridade.${topS?` O setor "${topS[0]}" e o mais critico com ${topS[1]} recomendacoes.`:''}`,
+     pill:aPct>60?'Nivel critico':aPct>40?'Monitorar':'Controlado',pb:aPct>60?RB:aPct>40?AB:GB,pc:aPct>60?R:aPct>40?A:G,
+     meta:`${d.filter(x=>x.prio==='Alta').length} RRPs de alta prio`},
+    {sev:avg===null?'info':avg<15?'ok':avg<30?'warn':'bad',ico:'&#9201;',ib:PB,ic:P,ttl:'Velocidade de Resolucao',
+     txt:avg!=null?`Tempo medio de ${avg} dias para implementacao.${slowS?` Setor mais lento: "${slowS[0]}" com ${slowS[1].toFixed(1)}d em media.`:''}`:'Dados de tempo insuficientes para o filtro selecionado.',
+     pill:avg===null?'Sem dados':avg<15?'Rapido':avg<30?'Moderado':'Necessita otimizacao',pb:avg===null?GRB:avg<15?GB:avg<30?AB:RB,pc:avg===null?GR:avg<15?G:avg<30?A:R,
+     meta:avg!=null?`baseado em ${ts.length} registros`:''},
+    {sev:pend===0?'ok':pend<=3?'warn':'bad',ico:'&#128204;',ib:AB,ic:A,ttl:'Backlog de Pendencias',
+     txt:`${pend} recomendacao${pend!==1?'es':''} ainda pendente${pend!==1?'s':''} ou com nota aberta.${pend>5?' Atencao: volume elevado pode indicar gargalo operacional.':pend>0?' Acompanhar progresso.':'Todos os itens foram implementados.'}`,
+     pill:pend===0?'Zerado':pend<=3?'Atencao':pend<=8?'Elevado':'Critico',pb:pend===0?GB:pend<=3?AB:RB,pc:pend===0?G:pend<=3?A:R,
+     meta:`${pend} de ${n} em aberto`},
+    {sev:'info',ico:'&#128161;',ib:OB,ic:O,ttl:'Acao Preventiva Predominante',
+     txt:'"Verificar/Normalizar" lidera o ranking com 39% das recomendacoes (55 ocorrencias), seguida de "Operacional" (20). Indica perfil majoritariamente preventivo do periodo.',
+     pill:'Foco preventivo',pb:OB,pc:O,meta:'Top-1 de 10 tipos de acao'}
+  ];
+  document.getElementById('ifeed').innerHTML=ins.map((ins,i)=>`
+    <div class="ins ${ins.sev}" style="animation-delay:${i*80}ms">
+      <div class="ins-ico" style="background:${ins.ib};color:${ins.ic}">${ins.ico}</div>
+      <div class="ins-body">
+        <div class="ins-ttl">${ins.ttl}</div>
+        <div class="ins-txt">${ins.txt}</div>
+        <div class="ins-foot">
+          <span class="ins-pill" style="background:${ins.pb};color:${ins.pc}">${ins.pill}</span>
+          ${ins.meta?`<span class="ins-meta">${ins.meta}</span>`:''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ── TABLE ──────────────────────────────────────────────────────────────────────
+function rTable(){
+  const d=filt,MAX=d.length,show=d;
+  document.getElementById('tsub').textContent=`Exibindo ${show.length} de ${d.length} registros`;
+  document.getElementById('tmore').textContent=d.length>MAX?`+ ${d.length-MAX} registros adicionais. Refine os filtros para ver mais.`:'';
+  const tm=d.filter(x=>x.tempo!==null&&x.tempo!==undefined&&!isNaN(Number(x.tempo))&&Number(x.tempo)>=0).map(x=>Number(x.tempo));
+  const maxT=tm.length?Math.max(...tm):1;
+  const pm={Alta:'pa','Média':'pm',Baixa:'pb'};
+  const sm={Realizado:'sr',Pendente:'sp','Nota aberta':'sn'};
+  document.getElementById('tb').innerHTML=show.map((r,i)=>{
+    const tpct=(r.tempo!==null&&r.tempo!==undefined&&!isNaN(Number(r.tempo)))?Math.round((Number(r.tempo)/maxT)*100):0;
+    return`<tr onclick="openRow(${i})">
+      <td><strong style="font-weight:600">${r.tag}</strong></td>
+      <td><span style="font-size:12px;color:var(--txt2)">${r.setor}</span></td>
+      <td><span style="font-size:12px;color:var(--txt3);font-variant-numeric:tabular-nums">${r.mes}</span></td>
+      <td><span style="font-size:12px;color:var(--txt2);max-width:220px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${(r.anomalia||'').replace(/"/g,'&quot;')}">${r.anomalia||'--'}</span></td>
+      <td><span style="font-size:12px;color:var(--txt2)">${r.rec||'--'}</span></td>
+      <td><span class="pill ${pm[r.prio]||''}">${r.prio}</span></td>
+      <td><span class="pill ${sm[r.status]||''}">${r.status}</span></td>
+      <td><div style="display:flex;align-items:center;gap:8px;min-width:80px">
+        <div class="tbl-prog" style="flex:1"><div class="tbl-prog-fill" style="width:${tpct}%;background:${r.prio==='Alta'?R:r.prio==='M\u00e9dia'?A:O}"></div></div>
+        <span style="font-size:11px;color:var(--txt3);min-width:24px;text-align:right">${(r.tempo!==null&&r.tempo!==undefined&&!isNaN(Number(r.tempo)))?Number(r.tempo)+'d':'--'}</span>
+      </div></td>
+      <td style="text-align:right;font-variant-numeric:tabular-nums;font-size:13px;color:var(--txt2)">${(r.tempo!==null&&r.tempo!==undefined&&!isNaN(Number(r.tempo)))?Number(r.tempo)+'d':'--'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function openRow(i){
+  const r=filt[i];
+  const pm={Alta:'pa','Média':'pm',Baixa:'pb'};const sm={Realizado:'sr',Pendente:'sp','Nota aberta':'sn'};
+  document.getElementById('ddet').innerHTML=`
+    <div class="dr"><span class="dk">Unidade</span><span class="dv">${r.unidade}</span></div>
+    <div class="dr"><span class="dk">TAG</span><span class="dv">${r.tag}</span></div>
+    <div class="dr"><span class="dk">Setor</span><span class="dv">${r.setor}</span></div>
+    <div class="dr"><span class="dk">Mes de referencia</span><span class="dv">${r.mes}</span></div>
+    <div class="dr"><span class="dk">Anomalia</span><span class="dv" style="font-size:12px">${r.anomalia||'--'}</span></div>
+    <div class="dr"><span class="dk">Recomendacao</span><span class="dv">${r.rec||'--'}</span></div>
+    <div class="dr"><span class="dk">Prioridade</span><span class="dv"><span class="pill ${pm[r.prio]||''}">${r.prio}</span></span></div>
+    <div class="dr"><span class="dk">Status</span><span class="dv"><span class="pill ${sm[r.status]||''}">${r.status}</span></span></div>
+    <div class="dr"><span class="dk">Tempo implementacao</span><span class="dv">${(r.tempo!==null&&r.tempo!==undefined&&!isNaN(Number(r.tempo)))?Number(r.tempo)+' dias':'Nao registrado'}</span></div>`;
+  document.getElementById('dov').classList.add('open');
+}
+function closeDM(e){if(!e||e.target===document.getElementById('dov'))document.getElementById('dov').classList.remove('open')}
+
+// ── IMPORT ─────────────────────────────────────────────────────────────────────
+function openMov(){document.getElementById('mov').classList.add('open')}
+function closeMov(e){if(!e||e.target===document.getElementById('mov'))document.getElementById('mov').classList.remove('open')}
+function dzOv(e){e.preventDefault();document.getElementById('dz').classList.add('drag')}
+function dzLv(){document.getElementById('dz').classList.remove('drag')}
+function dzDr(e){e.preventDefault();dzLv();const f=e.dataTransfer.files[0];if(f)pFile(f)}
+function hFile(e){const f=e.target.files[0];if(f)pFile(f)}
+
+function pFile(file){
+  closeMov();toast('Processando arquivo...');
+  const rd=new FileReader();
+  rd.onload=function(ev){
+    try{
+      let rows=[];
+      if(file.name.toLowerCase().endsWith('.csv')){
+        const lines=ev.target.result.trim().split('\n');
+        const hs=lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
+        rows=lines.slice(1).map(l=>{const v=l.split(',').map(x=>x.trim().replace(/"/g,''));const o={};hs.forEach((h,i)=>o[h]=v[i]);return o});
+      }else{const wb=XLSX.read(ev.target.result,{type:'binary'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]])}
+      iData(rows);
+    }catch(err){toast('Erro: '+err.message)}
+  };
+  file.name.toLowerCase().endsWith('.csv')?rd.readAsText(file):rd.readAsBinaryString(file);
+}
+
+function iData(rows){
+  if(!rows.length){toast('Nenhum dado encontrado');return}
+  const nrm=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const ks=[...new Set(rows.flatMap(r=>Object.keys(r)))];
+  const fc=(...ns)=>ks.find(k=>ns.some(n=>nrm(k).includes(nrm(n))));
+  const uC=fc('unidade'),sC=fc('setor'),tC=fc('tag'),mC=fc('mes','month'),pC=fc('prioridade'),stC=fc('status'),tmC=fc('tempo','dias'),rC=fc('recomendacao','recomendação'),anC=fc('anomalia');
+  all=rows.map(r=>({unidade:r[uC]||'N/A',setor:r[sC]||'N/A',tag:r[tC]||'N/A',mes:r[mC]?(typeof r[mC]==='number'?new Date((r[mC]-25569)*86400000).toISOString().substring(0,7):String(r[mC]).substring(0,7)):'N/A',prio:r[pC]||'Media',status:r[stC]||'Pendente',tempo:(r[tmC]===null||r[tmC]===undefined||r[tmC]===''||isNaN(parseFloat(r[tmC])))?null:parseFloat(r[tmC]),rec:r[rC]||'',anomalia:r[anC]||''}));
+  canonSetor(all);
+  filt=[...all];
+  document.getElementById('fU').innerHTML='<option value="">Todas</option>';
+  document.getElementById('fS').innerHTML='<option value="">Todos</option>';
+  document.getElementById('fM').innerHTML='<option value="">Todo periodo</option>';
+  const units=[...new Set(all.map(d=>d.unidade))].sort();
+  units.forEach(u=>{const o=document.createElement('option');o.value=u;o.text=u;document.getElementById('fU').appendChild(o)});
+  const sets=[...new Set(all.map(d=>d.setor))].sort();
+  sets.forEach(s=>{const o=document.createElement('option');o.value=s;o.text=s;document.getElementById('fS').appendChild(o)});
+  const mes=[...new Set(all.map(d=>d.mes))].sort();
+  mes.forEach(m=>{const o=document.createElement('option');o.value=m;o.text=m;document.getElementById('fM').appendChild(o)});
+  document.getElementById('fdate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+  updatePeriodPill();
+  applyF();
+  toast(all.length+' registros importados com sucesso!');
+}
+
+function toggleSB(){document.getElementById('sb').classList.toggle('col')}
+function goTo(id){const el=document.getElementById(id);if(el){el.scrollIntoView({behavior:'smooth',block:'start'})}}
+
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+window.addEventListener('DOMContentLoaded',init);
+
+// ── TAG RANKING ───────────────────────────────────────────────────────────────
+function rTagRank(){
+  const d=filt,tg={};
+  d.forEach(r=>{
+    if(!tg[r.tag])tg[r.tag]={c:0,s:r.setor};
+    tg[r.tag].c++;
+  });
+  const sorted=Object.entries(tg).sort((a,b)=>b[1].c-a[1].c).slice(0,10);
+  const mx=sorted[0]?sorted[0][1].c:1;
+  const el=document.getElementById('tag-rank');
+  if(!el)return;
+  el.innerHTML=sorted.map(([tag,v],i)=>`
+    <div class="tag-row">
+      <span class="trn ${i<3?'top':''}">${i+1}</span>
+      <span class="tt">${tag}</span>
+      <span class="ts">${v.s}</span>
+      <div class="tb2"><div class="tb2-bg"><div class="tb2-fill" style="width:${Math.round(v.c/mx*100)}%"></div></div></div>
+      <span class="tc">${v.c}</span>
+    </div>`).join('');
+}
+
+// ── HEATMAP ───────────────────────────────────────────────────────────────────
+function rHeatmap(){
+  const d=filt;
+  const setores=[...new Set(d.map(x=>x.setor))].sort();
+  const prios=['Alta','M\u00e9dia','Baixa'];
+  const mat={};
+  setores.forEach(s=>{mat[s]={'Alta':0,'M\u00e9dia':0,'Baixa':0}});
+  d.forEach(r=>{if(mat[r.setor])mat[r.setor][r.prio]=(mat[r.setor][r.prio]||0)+1});
+  const allV=setores.flatMap(s=>prios.map(p=>mat[s][p]));
+  const mx=Math.max(...allV,1);
+  function bg(v,p){
+    const t=v/mx;
+    if(p==='Alta'){return`rgba(173,46,46,${0.08+t*0.75})`}
+    if(p==='Media'){return`rgba(168,110,34,${0.08+t*0.75})`}
+    return`rgba(79,104,53,${0.08+t*0.75})`;
+  }
+  function fg(v,p){
+    if(v===0)return'var(--border2)';
+    const t=v/mx;
+    if(t>.45)return'#fff';
+    return p==='Alta'?'var(--red)':p==='Media'?'var(--amber)':'var(--olive)';
+  }
+  const el=document.getElementById('hmap-wrap');
+  if(!el)return;
+  el.innerHTML=`
+    <div class="hmap-hdr">
+      <div class="hmap-hdr-spc"></div>
+      ${prios.map(p=>`<div class="hmap-hdr-lbl">${p}</div>`).join('')}
+    </div>
+    <div class="hmap">
+      ${setores.map(s=>`
+        <div class="hmap-row">
+          <span class="hmap-lbl" title="${s}">${s}</span>
+          ${prios.map(p=>{const v=mat[s][p]||0;return`<div class="hmap-cell" style="background:${bg(v,p)};color:${fg(v,p)}" title="${s} / ${p}: ${v} RRPs">${v||'&#160;'}</div>`}).join('')}
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── SCROLLSPY ─────────────────────────────────────────────────────────────────
+(function(){
+  const IDS=['hero','s-temporal','s-setores','s-prio','s-ranking','s-insights','s-table'];
+  const sc=document.getElementById('scroll');
+  if(!sc)return;
+  let tk=false;
+  sc.addEventListener('scroll',function(){
+    if(!tk){requestAnimationFrame(function(){
+      const st=sc.scrollTop;
+      let active='hero';
+      IDS.forEach(id=>{const el=document.getElementById(id);if(el&&el.offsetTop-120<=st)active=id;});
+      document.querySelectorAll('.nv').forEach(n=>{
+        const fn=n.getAttribute('onclick')||'';
+        n.classList.toggle('on',fn.includes("'"+active+"'"));
+      });
+      tk=false;
+    });tk=true;}
+  });
+})();
+
+// ── INTERSECTION OBSERVER ─────────────────────────────────────────────────────
+(function(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('vis');}});
+  },{threshold:.06,rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.sec-anim').forEach(el=>obs.observe(el));
+})();
+
+// ── PATCH rCharts to include ranking + heatmap ────────────────────────────────
+const _origRC=rCharts;
+rCharts=function(){_origRC();rTagRank();rHeatmap();};
+
+</script>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js');});}</script></body>
+</html>
