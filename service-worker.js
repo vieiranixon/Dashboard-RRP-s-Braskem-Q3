@@ -1,8 +1,8 @@
-const CACHE_NAME = "dashboard-v4";
+const CACHE_NAME = "dashboard-v3";
 
 const urlsToCache = [
   "./",
-  "./index.html",
+  "./Dashboard_RRPs_Q3.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"

@@ -2,7 +2,7 @@
   "name": "John Crane / Braskem Dashboard Geral",
   "short_name": "Dashboard RRP",
   "description": "Dashboard executivo para acompanhamento de RRPs, indicadores, gráficos e relatórios.",
-  "start_url": "./index.html",
+  "start_url": "./Dashboard_RRPs_Q3.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "landscape",
