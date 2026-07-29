@@ -548,7 +548,22 @@ const BL="#284F82",BLB="#E3EBF6";
 const GR="#6B6358",GRB="#EDEBE6";
 const PAL=[A,G,BL,R,P,O,T,BR];
 
-let all=RAW.map(r=>{
+const LS_KEY='rrp_dashboard_data_v1';
+function loadSaved(){
+  try{
+    const raw=localStorage.getItem(LS_KEY);
+    if(!raw)return null;
+    const arr=JSON.parse(raw);
+    return Array.isArray(arr)&&arr.length?arr:null;
+  }catch(e){return null}
+}
+function saveData(arr){
+  try{localStorage.setItem(LS_KEY,JSON.stringify(arr));}catch(e){console.warn('Nao foi possivel salvar:',e);}
+}
+function clearSaved(){
+  try{localStorage.removeItem(LS_KEY);}catch(e){}
+}
+let all=(loadSaved())||RAW.map(r=>{
   const t=r[6];
   const tempo=(t===null||t===undefined||t==='')?null:parseFloat(t);
   return{unidade:r[0],setor:r[1],tag:r[2],mes:r[3],prio:r[4],status:r[5],tempo:isNaN(tempo)?null:tempo,rec:r[7]||'',anomalia:r[8]||''};
@@ -855,6 +870,7 @@ function iData(rows){
   const uC=fc('unidade'),sC=fc('setor'),tC=fc('tag'),mC=fc('mes','month'),pC=fc('prioridade'),stC=fc('status'),tmC=fc('tempo','dias'),rC=fc('recomendacao','recomendação'),anC=fc('anomalia');
   all=rows.map(r=>({unidade:r[uC]||'N/A',setor:r[sC]||'N/A',tag:r[tC]||'N/A',mes:r[mC]?(typeof r[mC]==='number'?new Date((r[mC]-25569)*86400000).toISOString().substring(0,7):String(r[mC]).substring(0,7)):'N/A',prio:r[pC]||'Media',status:r[stC]||'Pendente',tempo:(r[tmC]===null||r[tmC]===undefined||r[tmC]===''||isNaN(parseFloat(r[tmC])))?null:parseFloat(r[tmC]),rec:r[rC]||'',anomalia:r[anC]||''}));
   canonSetor(all);
+  saveData(all);
   filt=[...all];
   document.getElementById('fU').innerHTML='<option value="">Todas</option>';
   document.getElementById('fS').innerHTML='<option value="">Todos</option>';
