@@ -1,42 +1,32 @@
-const CACHE_NAME = "dashboard-v3";
+const CACHE_NAME = "dashboard-v4";
 
 const urlsToCache = [
   "./",
-  "./Dashboard_RRPs_Q3.html",
+  "./index.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
 ];
 
-// Instala o Service Worker
 self.addEventListener("install", event => {
+  self.skipWaiting();
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
   );
 });
 
-// Ativa e remove caches antigos
 self.addEventListener("activate", event => {
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cache => {
-          if (cache !== CACHE_NAME) {
-            return caches.delete(cache);
-          }
-        })
-      );
-    })
+    caches.keys().then(cacheNames =>
+      Promise.all(
+        cacheNames.map(cache => cache !== CACHE_NAME ? caches.delete(cache) : null)
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// Busca arquivos
 self.addEventListener("fetch", event => {
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        return response || fetch(event.request);
-      })
+    caches.match(event.request).then(response => response || fetch(event.request).catch(() => caches.match('./index.html')))
   );
 });
