@@ -2,7 +2,7 @@ const CACHE_NAME = "dashboard-v1";
 
 const urlsToCache = [
   "./",
-  "./index.html",
+  "./Dashboard_RRPs_Q3.html",
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png"
@@ -39,16 +39,4 @@ self.addEventListener("fetch", event => {
         return response || fetch(event.request);
       })
   );
-});<script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => {
-            console.log("Service Worker registrado!", reg);
-        })
-        .catch(err => {
-            console.log("Erro:", err);
-        });
-    });
-}
-</script>
+});
