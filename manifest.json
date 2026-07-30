@@ -35,15 +35,15 @@
   ],
   "screenshots": [
     {
-      "src": "screenshots/desktop-1.png",
-      "sizes": "1280x720",
+      "src": "screenshot/desktop1.png",
+      "sizes": "1909x1199",
       "type": "image/png",
       "form_factor": "wide",
       "label": "Visão geral do Dashboard RRP"
     },
     {
-      "src": "screenshots/mobile-1.png",
-      "sizes": "540x720",
+      "src": "screenshot/mobile1.png",
+      "sizes": "1080x2340",
       "type": "image/png",
       "form_factor": "narrow",
       "label": "Dashboard RRP em dispositivo móvel"
