@@ -992,5 +992,16 @@ const _origRC=rCharts;
 rCharts=function(){_origRC();rTagRank();rHeatmap();};
 
 </script>
-<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js');});}</script></body>
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('./service-worker.js');});}</script>
+<script>
+if('serviceWorker' in navigator){
+window.addEventListener('load',async()=>{
+ const reg=await navigator.serviceWorker.register('./service-worker.js');
+ setInterval(()=>reg.update(),60000);
+ navigator.serviceWorker.addEventListener('controllerchange',()=>window.location.reload());
+});
+}
+</script>
+
+</body>
 </html>
