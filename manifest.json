@@ -6,11 +6,15 @@
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
   "orientation": "landscape",
   "background_color": "#F4F1EC",
   "theme_color": "#B5622A",
   "lang": "pt-BR",
   "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "iarc_rating_id": "",
   "categories": [
     "business",
     "productivity",
@@ -27,6 +31,22 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/desktop-1.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Visão geral do Dashboard RRP"
+    },
+    {
+      "src": "screenshots/mobile-1.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Dashboard RRP em dispositivo móvel"
     }
   ]
 }
