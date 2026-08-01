@@ -490,7 +490,7 @@ tbody tr:last-child td{border-bottom:none}
 <div class="tbl-wrap">
 <table>
 <thead><tr>
-<th>TAG</th><th>Setor</th><th>Mês</th>
+<th>Sequência</th><th>TAG</th><th>Setor</th><th>Mês</th>
 <th>Anomalia</th>
 <th>Recomendação</th>
 <th>Prioridade</th><th>Status</th>
@@ -797,7 +797,7 @@ function rInsights(){
 
 // ── TABLE ──────────────────────────────────────────────────────────────────────
 function rTable(){
-  const d=filt,MAX=d.length,show=d;
+  const d=filt,MAX=d.length,show=[...d].reverse();
   document.getElementById('tsub').textContent=`Exibindo ${show.length} de ${d.length} registros`;
   document.getElementById('tmore').textContent=d.length>MAX?`+ ${d.length-MAX} registros adicionais. Refine os filtros para ver mais.`:'';
   const tm=d.filter(x=>x.tempo!==null&&x.tempo!==undefined&&!isNaN(Number(x.tempo))&&Number(x.tempo)>=0).map(x=>Number(x.tempo));
@@ -806,7 +806,8 @@ function rTable(){
   const sm={Realizado:'sr',Pendente:'sp','Nota aberta':'sn'};
   document.getElementById('tb').innerHTML=show.map((r,i)=>{
     const tpct=(r.tempo!==null&&r.tempo!==undefined&&!isNaN(Number(r.tempo)))?Math.round((Number(r.tempo)/maxT)*100):0;
-    return`<tr onclick="openRow(${i})">
+    return`<tr onclick="openRow(${filt.indexOf(r)})">
+      <td><span style="font-size:12px;color:var(--txt2)">${r.seq||'--'}</span></td>
       <td><strong style="font-weight:600">${r.tag}</strong></td>
       <td><span style="font-size:12px;color:var(--txt2)">${r.setor}</span></td>
       <td><span style="font-size:12px;color:var(--txt3);font-variant-numeric:tabular-nums">${r.mes}</span></td>
@@ -827,6 +828,7 @@ function openRow(i){
   const r=filt[i];
   const pm={Alta:'pa','Média':'pm',Baixa:'pb'};const sm={Realizado:'sr',Pendente:'sp','Nota aberta':'sn'};
   document.getElementById('ddet').innerHTML=`
+    <div class="dr"><span class="dk">Sequência</span><span class="dv">${r.seq||'--'}</span></div>
     <div class="dr"><span class="dk">Unidade</span><span class="dv">${r.unidade}</span></div>
     <div class="dr"><span class="dk">TAG</span><span class="dv">${r.tag}</span></div>
     <div class="dr"><span class="dk">Setor</span><span class="dv">${r.setor}</span></div>
@@ -870,8 +872,8 @@ function iData(rows){
   const nrm=s=>String(s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
   const ks=[...new Set(rows.flatMap(r=>Object.keys(r)))];
   const fc=(...ns)=>ks.find(k=>ns.some(n=>nrm(k).includes(nrm(n))));
-  const uC=fc('unidade'),sC=fc('setor'),tC=fc('tag'),mC=fc('mes','month'),pC=fc('prioridade'),stC=fc('status'),tmC=fc('tempo','dias'),rC=fc('recomendacao','recomendação'),anC=fc('anomalia');
-  all=rows.map(r=>({unidade:r[uC]||'N/A',setor:r[sC]||'N/A',tag:r[tC]||'N/A',mes:r[mC]?(typeof r[mC]==='number'?new Date((r[mC]-25569)*86400000).toISOString().substring(0,7):String(r[mC]).substring(0,7)):'N/A',prio:r[pC]||'Media',status:r[stC]||'Pendente',tempo:(r[tmC]===null||r[tmC]===undefined||r[tmC]===''||isNaN(parseFloat(r[tmC])))?null:parseFloat(r[tmC]),rec:r[rC]||'',anomalia:r[anC]||''}));
+  const uC=fc('unidade'),sC=fc('setor'),tC=fc('tag'),mC=fc('mes','month'),pC=fc('prioridade'),stC=fc('status'),tmC=fc('tempo','dias'),rC=fc('recomendacao','recomendação'),anC=fc('anomalia'),sqC=fc('sequencia','sequência','seq','nº','n°','numero','número');
+  all=rows.map(r=>({unidade:r[uC]||'N/A',setor:r[sC]||'N/A',tag:r[tC]||'N/A',seq:r[sqC]!==undefined&&r[sqC]!==null&&r[sqC]!==''?r[sqC]:'',mes:r[mC]?(typeof r[mC]==='number'?new Date((r[mC]-25569)*86400000).toISOString().substring(0,7):String(r[mC]).substring(0,7)):'N/A',prio:r[pC]||'Media',status:r[stC]||'Pendente',tempo:(r[tmC]===null||r[tmC]===undefined||r[tmC]===''||isNaN(parseFloat(r[tmC])))?null:parseFloat(r[tmC]),rec:r[rC]||'',anomalia:r[anC]||''}));
   canonSetor(all);
   saveData(all);
   filt=[...all];
