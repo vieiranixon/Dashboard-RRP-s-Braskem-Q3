@@ -572,6 +572,7 @@ let all=(loadSaved())||RAW.map(r=>{
   return{unidade:r[0],setor:r[1],tag:r[2],mes:r[3],prio:r[4],status:r[5],tempo:isNaN(tempo)?null:tempo,rec:r[7]||'',anomalia:r[8]||''};
 });
 function nrmTxt(s){return String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
+function fmtMes(m){if(!m||m==='N/A')return m||'--';const p=String(m).split('-');if(p.length<2)return m;return p[1]+'/'+p[0].slice(-2)}
 function canonSetor(arr){
   const groups={};
   arr.forEach(d=>{
@@ -609,7 +610,7 @@ function init(){
   const sets=[...new Set(all.map(d=>d.setor))].sort();
   sets.forEach(s=>{const o=document.createElement('option');o.value=s;o.text=s;document.getElementById('fS').appendChild(o)});
   const mes=[...new Set(all.map(d=>d.mes))].sort();
-  mes.forEach(m=>{const o=document.createElement('option');o.value=m;o.text=m;document.getElementById('fM').appendChild(o)});
+  mes.forEach(m=>{const o=document.createElement('option');o.value=m;o.text=fmtMes(m);document.getElementById('fM').appendChild(o)});
   const now=new Date();
   document.getElementById('fdate').textContent=now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
   updatePeriodPill();
@@ -810,7 +811,7 @@ function rTable(){
       <td><span style="font-size:12px;color:var(--txt2)">${r.seq||'--'}</span></td>
       <td><strong style="font-weight:600">${r.tag}</strong></td>
       <td><span style="font-size:12px;color:var(--txt2)">${r.setor}</span></td>
-      <td><span style="font-size:12px;color:var(--txt3);font-variant-numeric:tabular-nums">${r.mes}</span></td>
+      <td><span style="font-size:12px;color:var(--txt3);font-variant-numeric:tabular-nums">${fmtMes(r.mes)}</span></td>
       <td><span style="font-size:12px;color:var(--txt2);max-width:220px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden" title="${(r.anomalia||'').replace(/"/g,'&quot;')}">${r.anomalia||'--'}</span></td>
       <td><span style="font-size:12px;color:var(--txt2)">${r.rec||'--'}</span></td>
       <td><span class="pill ${pm[r.prio]||''}">${r.prio}</span></td>
@@ -832,7 +833,7 @@ function openRow(i){
     <div class="dr"><span class="dk">Unidade</span><span class="dv">${r.unidade}</span></div>
     <div class="dr"><span class="dk">TAG</span><span class="dv">${r.tag}</span></div>
     <div class="dr"><span class="dk">Setor</span><span class="dv">${r.setor}</span></div>
-    <div class="dr"><span class="dk">Mes de referencia</span><span class="dv">${r.mes}</span></div>
+    <div class="dr"><span class="dk">Mes de referencia</span><span class="dv">${fmtMes(r.mes)}</span></div>
     <div class="dr"><span class="dk">Anomalia</span><span class="dv" style="font-size:12px">${r.anomalia||'--'}</span></div>
     <div class="dr"><span class="dk">Recomendacao</span><span class="dv">${r.rec||'--'}</span></div>
     <div class="dr"><span class="dk">Prioridade</span><span class="dv"><span class="pill ${pm[r.prio]||''}">${r.prio}</span></span></div>
@@ -885,7 +886,7 @@ function iData(rows){
   const sets=[...new Set(all.map(d=>d.setor))].sort();
   sets.forEach(s=>{const o=document.createElement('option');o.value=s;o.text=s;document.getElementById('fS').appendChild(o)});
   const mes=[...new Set(all.map(d=>d.mes))].sort();
-  mes.forEach(m=>{const o=document.createElement('option');o.value=m;o.text=m;document.getElementById('fM').appendChild(o)});
+  mes.forEach(m=>{const o=document.createElement('option');o.value=m;o.text=fmtMes(m);document.getElementById('fM').appendChild(o)});
   document.getElementById('fdate').textContent=new Date().toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
   updatePeriodPill();
   applyF();
